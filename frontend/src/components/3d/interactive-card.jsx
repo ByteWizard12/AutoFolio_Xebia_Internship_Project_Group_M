@@ -38,15 +38,15 @@ export function InteractiveCard3D({ children, className = "" }) {
 
   return (
     <div
-      ref={cardRef}
-      className={`relative transition-all duration-200 ease-out ${className}`}
+      // ref={cardRef}
+      // className={`relative transition-all duration-200 ease-out ${className}`}
       style={{
         transform,
         transformStyle: "preserve-3d",
       }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
+      // onMouseMove={handleMouseMove}
+      // onMouseLeave={handleMouseLeave}
+      // onMouseEnter={handleMouseEnter}
     >
       {/* Glow effect */}
       <div

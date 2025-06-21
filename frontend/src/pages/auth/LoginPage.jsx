@@ -27,8 +27,10 @@ export default function LoginPage() {
       const success = await login(email, password)
       if (success) {
         toast({
-          title: "Welcome back!",
+          title: "Welcome back! 🎉",
           description: "You have been successfully logged in.",
+          variant: "success",
+          duration: 4000, // 4 seconds
         })
         navigate("/dashboard")
       } else {
@@ -36,6 +38,7 @@ export default function LoginPage() {
           title: "Login failed",
           description: "Invalid email or password.",
           variant: "destructive",
+          duration: 6000, // 6 seconds for errors
         })
       }
     } catch (error) {
@@ -43,6 +46,7 @@ export default function LoginPage() {
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
+        duration: 6000,
       })
     } finally {
       setLoading(false)
@@ -57,7 +61,7 @@ export default function LoginPage() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold">AutoPort</span>
+            <span className="text-xl font-bold">AutoFolio</span>
           </Link>
         </div>
 

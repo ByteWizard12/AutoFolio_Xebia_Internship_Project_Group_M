@@ -17,7 +17,7 @@ export default function HomePage() {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold">AutoPort</span>
+            <span className="text-xl font-bold">AutoFolio</span>
           </div>
           <nav className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-gray-600 hover:text-gray-900">
@@ -45,7 +45,7 @@ export default function HomePage() {
       <section className="relative py-20 px-4 overflow-hidden">
         <FloatingShapes />
         <div className="container mx-auto text-center relative z-10">
-          <Badge className="mb-4" variant="secondary">
+          <Badge className="text-xl mb-10" variant="secondary">
             🚀 Generate portfolios in minutes
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -239,7 +239,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 AutoPort. All rights reserved.</p>
+            <p>&copy; 2025 AutoFolio. All rights reserved.</p>
           </div>
         </div>
       </footer>

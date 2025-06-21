@@ -35,9 +35,9 @@ export function PortfolioPreview3D({ portfolioData }) {
       ref={containerRef}
       className="relative w-full h-full"
       style={{ perspective: "1200px" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
+      // onMouseMove={handleMouseMove}
+      // onMouseLeave={handleMouseLeave}
+      // onMouseEnter={handleMouseEnter}
     >
       {/* 3D Portfolio Container */}
       <div
