@@ -10,56 +10,70 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem("autoport_user")
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
+    const savedToken = localStorage.getItem("autoport_user_token")
+    if (savedToken) {
+      // You might want to decode the token and get user info
+      // For now, we'll just assume if a token exists, the user is "logged in"
+      // You could store user details in localStorage as well during login
+      setUser({ token: savedToken });
     }
     setLoading(false)
   }, [])
 
   const login = async (email, password) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Mock successful login
-      const mockUser = {
-        id: "1",
-        email,
-        name: email.split("@")[0],
+      const response = await fetch('http://localhost:8000/api/v1/user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const token = data.token;
+        if(token){
+          localStorage.setItem("autoport_user_token" , token);
+          setUser({email}) // Or more user details from response
+          return true;
+        }
       }
-
-      setUser(mockUser)
-      localStorage.setItem("autoport_user", JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
+      return false;
+    }catch(e){
+      console.error("Login error", e);
+      return false;
     }
   }
 
-  const register = async (name, email, password) => {
+  const register = async (fullName, email, password) => {
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch("http://localhost:8000/api/v1/user/signup", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          password
+        })
+      });
 
-      // Mock successful registration
-      const mockUser = {
-        id: "1",
-        email,
-        name,
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("autoport_user", JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
+      return response.ok;
+    }catch(e){
+      console.error("Register error", e);
+      return false;
     }
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem("autoport_user")
+    localStorage.removeItem("autoport_user_token")
   }
 
   return <AuthContext.Provider value={{ user, login, register, logout, loading }}>{children}</AuthContext.Provider>
