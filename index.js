@@ -4,6 +4,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 const {userRouter} = require("./Routes/user");
+const {portfolioRouter} = require("./Routes/portfolio");
 const cors = require("cors");
 
 app.use(cors({
@@ -17,6 +18,7 @@ app.use(express.json());
 
 
 app.use("/api/v1/user/" , userRouter);
+app.use("/api/v1/portfolio/" , portfolioRouter);
 
 
 async function main() {

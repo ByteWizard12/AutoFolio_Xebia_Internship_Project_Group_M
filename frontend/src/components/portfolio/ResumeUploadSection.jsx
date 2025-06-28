@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "../ui/button"
 import { Label } from "../ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
@@ -12,21 +12,76 @@ import { SkillsForm } from "./SkillsForm"
 import { ProjectsForm } from "./ProjectsForm"
 import { ExperienceForm } from "./ExperienceForm"
 import { EducationForm } from "./EducationForm"
+import { useAuth } from "../auth-provider"
+import { useToast } from "../../hooks/use-toast"
 
-export function ResumeUploadSection({ onResumeProcessed, portfolioData, updatePortfolioData }) {
+export function ResumeUploadSection({ onResumeProcessed, portfolioData, updatePortfolioData, autoOpenFilePicker, setAutoOpenFilePicker }) {
   const [uploadedFile, setUploadedFile] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isProcessed, setIsProcessed] = useState(false)
   const [showExtractedData, setShowExtractedData] = useState(false)
   const [extractedData, setExtractedData] = useState(null)
+  const [uploadedResumeId, setUploadedResumeId] = useState(null)
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    if (autoOpenFilePicker && fileInputRef.current) {
+      fileInputRef.current.click()
+      setAutoOpenFilePicker(false)
+    }
+  }, [autoOpenFilePicker, setAutoOpenFilePicker])
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Check file type
+      if (!file.type.includes('pdf')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a PDF file only",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload a file smaller than 5MB",
+          variant: "destructive",
+        })
+        return
+      }
+      
       setUploadedFile(file)
       setIsProcessed(false)
       setShowExtractedData(false)
     }
+  }
+
+  const uploadResumeToBackend = async (file) => {
+    const formData = new FormData()
+    formData.append('resume', file)
+
+    const token = localStorage.getItem('token')
+    
+    const response = await fetch('http://localhost:8000/api/v1/portfolio/upload-resume', {
+      method: 'POST',
+      headers: {
+        'token': token
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to upload resume')
+    }
+
+    return await response.json()
   }
 
   const processResume = async () => {
@@ -34,57 +89,83 @@ export function ResumeUploadSection({ onResumeProcessed, portfolioData, updatePo
 
     setIsProcessing(true)
 
-    // Simulate AI processing with realistic delay
-    await new Promise((resolve) => setTimeout(resolve, 3000))
+    try {
+      // Upload resume to backend
+      const uploadResult = await uploadResumeToBackend(uploadedFile)
+      setUploadedResumeId(uploadResult.resumeId)
 
-    // Mock extracted data - in real implementation, this would come from AI service
-    const mockExtractedData = {
-      fullName: "John Doe",
-      currentRole: "Senior Software Developer",
-      shortBio: "Passionate full-stack developer with 5+ years of experience building scalable web applications",
-      location: "San Francisco, CA",
-      email: "john.doe@email.com",
-      phone: "+1 (555) 123-4567",
-      linkedinUrl: "https://linkedin.com/in/johndoe",
-      githubUrl: "https://github.com/johndoe",
-      aboutMe:
-        "I'm a dedicated software developer with expertise in modern web technologies. I enjoy solving complex problems and building user-friendly applications that make a difference.",
-      technicalSkills: ["JavaScript", "React", "Node.js", "Python", "PostgreSQL", "AWS"],
-      projects: [
-        {
-          name: "E-commerce Platform",
-          description: "Full-stack e-commerce solution with React and Node.js",
-          techStack: ["React", "Node.js", "MongoDB", "Stripe"],
-          githubRepo: "https://github.com/johndoe/ecommerce",
-          liveLink: "https://myecommerce.com",
-        },
-      ],
-      experience: [
-        {
-          jobTitle: "Senior Software Developer",
-          companyName: "Tech Corp",
-          duration: "2021 - Present",
-          responsibilities: "Led development of microservices architecture, mentored junior developers",
-        },
-      ],
-      education: [
-        {
-          degree: "Bachelor of Science in Computer Science",
-          institution: "University of California",
-          duration: "2016 - 2020",
-          cgpa: "3.8",
-        },
-      ],
+      // For now, we'll use mock data since AI parsing is not implemented yet
+      // In the future, this would call an AI service to parse the resume
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate processing time
+
+      // Mock extracted data - in real implementation, this would come from AI service
+      const mockExtractedData = {
+        fullName: "John Doe",
+        currentRole: "Senior Software Developer",
+        shortBio: "Passionate full-stack developer with 5+ years of experience building scalable web applications",
+        location: "San Francisco, CA",
+        email: "john.doe@email.com",
+        phone: "+1 (555) 123-4567",
+        linkedinUrl: "https://linkedin.com/in/johndoe",
+        githubUrl: "https://github.com/johndoe",
+        aboutMe:
+          "I'm a dedicated software developer with expertise in modern web technologies. I enjoy solving complex problems and building user-friendly applications that make a difference.",
+        technicalSkills: ["JavaScript", "React", "Node.js", "Python", "PostgreSQL", "AWS"],
+        projects: [
+          {
+            name: "E-commerce Platform",
+            description: "Full-stack e-commerce solution with React and Node.js",
+            techStack: ["React", "Node.js", "MongoDB", "Stripe"],
+            githubRepo: "https://github.com/johndoe/ecommerce",
+            liveLink: "https://myecommerce.com",
+          },
+        ],
+        experience: [
+          {
+            jobTitle: "Senior Software Developer",
+            companyName: "Tech Corp",
+            duration: "2021 - Present",
+            responsibilities: "Led development of microservices architecture, mentored junior developers",
+          },
+        ],
+        education: [
+          {
+            degree: "Bachelor of Science in Computer Science",
+            institution: "University of California",
+            duration: "2016 - 2020",
+            cgpa: "3.8",
+          },
+        ],
+      }
+
+      setExtractedData(mockExtractedData)
+      setIsProcessing(false)
+      setIsProcessed(true)
+      setShowExtractedData(true)
+
+      toast({
+        title: "Resume uploaded successfully!",
+        description: "Your resume has been uploaded and is ready for processing",
+      })
+
+    } catch (error) {
+      console.error('Error processing resume:', error)
+      setIsProcessing(false)
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload resume. Please try again.",
+        variant: "destructive",
+      })
     }
-
-    setExtractedData(mockExtractedData)
-    setIsProcessing(false)
-    setIsProcessed(true)
-    setShowExtractedData(true)
   }
 
   const confirmExtractedData = () => {
-    onResumeProcessed(extractedData)
+    // Store the resume ID with the portfolio data for later use
+    const dataWithResumeId = {
+      ...extractedData,
+      resumeId: uploadedResumeId
+    }
+    onResumeProcessed(dataWithResumeId)
   }
 
   const editExtractedData = (section, data) => {
@@ -110,13 +191,14 @@ export function ResumeUploadSection({ onResumeProcessed, portfolioData, updatePo
                 <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <div className="space-y-2">
                   <p className="text-lg font-medium">Upload your resume</p>
-                  <p className="text-gray-600">PDF, DOC, or DOCX files supported (Max 10MB)</p>
+                  <p className="text-gray-600">PDF files only (Max 5MB)</p>
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="resume-upload"
+                    ref={fileInputRef}
                   />
                   <Label htmlFor="resume-upload">
                     <Button variant="outline" className="cursor-pointer">
@@ -158,7 +240,7 @@ export function ResumeUploadSection({ onResumeProcessed, portfolioData, updatePo
                 <div className="mt-6 text-center">
                   <div className="inline-flex items-center px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <Loader2 className="w-4 h-4 mr-2 animate-spin text-yellow-600" />
-                    <span className="text-yellow-800">AI is analyzing your resume...</span>
+                    <span className="text-yellow-800">Uploading and processing your resume...</span>
                   </div>
                 </div>
               )}

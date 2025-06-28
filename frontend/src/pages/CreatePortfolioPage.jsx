@@ -23,6 +23,7 @@ import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectio
 export default function CreatePortfolioPage() {
   const [step, setStep] = useState(1)
   const [dataSource, setDataSource] = useState(null) // 'resume' or 'manual'
+  const [autoOpenFilePicker, setAutoOpenFilePicker] = useState(false)
   const [portfolioData, setPortfolioData] = useState({
     // Personal Info
     fullName: "",
@@ -111,6 +112,9 @@ export default function CreatePortfolioPage() {
     setDataSource(source)
     if (source === "manual") {
       handleNext()
+    } else if (source === "resume") {
+      setAutoOpenFilePicker(true)
+      handleNext()
     }
   }
 
@@ -135,7 +139,7 @@ export default function CreatePortfolioPage() {
     }))
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate required fields
     const requiredFields = {
       fullName: portfolioData.fullName,
@@ -164,15 +168,52 @@ export default function CreatePortfolioPage() {
       return
     }
 
-    toast({
-      title: "Portfolio created successfully!",
-      description: "Redirecting to the editor...",
-      duration: 3000,
-    })
+    try {
+      // Create portfolio in backend
+      const token = localStorage.getItem('token')
+      const portfolioPayload = {
+        name: portfolioData.fullName + "'s Portfolio",
+        template: portfolioData.template,
+        resumeId: portfolioData.resumeId // This will be undefined if no resume was uploaded
+      }
 
-    // Save portfolio data to localStorage or send to API
-    localStorage.setItem("portfolioData", JSON.stringify(portfolioData))
-    navigate("/edit/new")
+      const response = await fetch('http://localhost:8000/api/v1/portfolio/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': token
+        },
+        body: JSON.stringify(portfolioPayload)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to create portfolio')
+      }
+
+      const result = await response.json()
+
+      toast({
+        title: "Portfolio created successfully!",
+        description: "Redirecting to the editor...",
+        duration: 3000,
+      })
+
+      // Save portfolio data to localStorage for editing
+      localStorage.setItem("portfolioData", JSON.stringify(portfolioData))
+      localStorage.setItem("portfolioId", result.portfolioId)
+      
+      navigate("/edit/new")
+
+    } catch (error) {
+      console.error('Error creating portfolio:', error)
+      toast({
+        title: "Failed to create portfolio",
+        description: error.message || "Please try again",
+        variant: "destructive",
+        duration: 5000,
+      })
+    }
   }
 
   const renderStepContent = () => {
@@ -250,6 +291,8 @@ export default function CreatePortfolioPage() {
               onResumeProcessed={handleResumeProcessed}
               portfolioData={portfolioData}
               updatePortfolioData={updatePortfolioData}
+              autoOpenFilePicker={autoOpenFilePicker}
+              setAutoOpenFilePicker={setAutoOpenFilePicker}
             />
           )
         } else {
