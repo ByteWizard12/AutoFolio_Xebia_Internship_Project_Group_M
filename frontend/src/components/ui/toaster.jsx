@@ -9,7 +9,7 @@ export function Toaster() {
 
   return (
     <div className="fixed bottom-0 right-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]">
-      {toasts.map(({ id, title, description, action, variant = "default", duration }) => (
+      {toasts.map(({ id, title, description, action, variant = "default", duration, ...props }) => (
         <div
           key={id}
           className={cn(
@@ -22,6 +22,7 @@ export function Toaster() {
             variant === "destructive" && "bg-destructive text-destructive-foreground border-destructive",
             variant === "success" && "bg-green-50 text-green-900 border-green-200",
           )}
+          {...props}
         >
           <div className="grid gap-1 flex-1">
             {title && (
@@ -64,6 +65,17 @@ export function Toaster() {
           {action}
         </div>
       ))}
+
+      <style jsx>{`
+        @keyframes shrink {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+      `}</style>
     </div>
   )
 }

@@ -7,14 +7,15 @@ const jwt = require("jsonwebtoken");
 const {JWT_USER} = require("../config");
 const {userModel} = require("../db");
 
+
 const userRouter = Router();
 
 userRouter.post("/signup" , async( req , res) => {
     const requiredBody = z.object({
         email : z.string().min(3).max(100).email(),
         password : z.string().min(3).max(100),
-        firstName : z.string().min(1).max(100),
-        lastName : z.string().max(100)
+        firstName : z.string().min(3).max(100),
+        lastName : z.string().min(3).max(100)
     })
 
     const parseWithDataSuccess = requiredBody.safeParse(req.body);

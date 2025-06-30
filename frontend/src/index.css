@@ -183,12 +183,3 @@
 .glow-purple {
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
-
-@keyframes shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}
