@@ -9,6 +9,9 @@ import DashboardPage from "./pages/DashboardPage"
 import CreatePortfolioPage from "./pages/CreatePortfolioPage"
 import EditPortfolioPage from "./pages/EditPortfolioPage"
 import SettingsPage from "./pages/SettingsPage"
+//edit by vaibhav 
+import PricingPage from "./pages/PricingPage"
+//edit end by vaibhav 
 import "./App.css"
 
 function App() {
@@ -25,6 +28,7 @@ function App() {
             <Route path="/create" element={<CreatePortfolioPage />} />
             <Route path="/edit/:id" element={<EditPortfolioPage />} />
             <Route path="/dashboard/settings" element={<SettingsPage />} />
+            <Route path="/pricing" element={<PricingPage />} /> 
           </Routes>
           <Toaster />
         </div>

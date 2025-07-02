@@ -38,6 +38,15 @@ export default function DashboardPage() {
       navigate("/auth/login")
     }
   }, [user, loading, navigate])
+//Edit by vaibhav
+  useEffect(() => {
+  const hasPaid = localStorage.getItem("hasPaid")
+  if (!loading && user && hasPaid !== "true") {
+    navigate("/pricing")
+  }
+}, [user, loading, navigate])
+
+//edit till this line 
 
   if (loading) {
     return (
