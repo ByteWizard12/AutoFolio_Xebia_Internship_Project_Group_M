@@ -48,6 +48,7 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      console.log({ name, email, password });
       const success = await register(name, email, password)
       if (success) {
         toast({

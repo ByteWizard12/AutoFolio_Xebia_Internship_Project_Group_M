@@ -1,74 +1,50 @@
-"use client"
+import { createContext, useContext, useState } from "react";
 
-import { createContext, useContext, useEffect, useState } from "react"
-
-const AuthContext = createContext(undefined)
+const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem("autoport_user")
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-    }
-    setLoading(false)
-  }, [])
-
-  const login = async (email, password) => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Mock successful login
-      const mockUser = {
-        id: "1",
-        email,
-        name: email.split("@")[0],
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("autoport_user", JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
-    }
-  }
+  const [user, setUser] = useState(null);
 
   const register = async (name, email, password) => {
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Mock successful registration
-      const mockUser = {
-        id: "1",
-        email,
-        name,
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("autoport_user", JSON.stringify(mockUser))
-      return true
-    } catch (error) {
-      return false
+    const res = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      console.error("Registration error:", error);
     }
-  }
+    return res.ok;
+  };
+
+  const login = async (email, password) => {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      setUser(data.user);
+      return true;
+    }
+    return false;
+  };
 
   const logout = () => {
-    setUser(null)
-    localStorage.removeItem("autoport_user")
-  }
+    localStorage.removeItem("token");
+    setUser(null);
+  };
 
-  return <AuthContext.Provider value={{ user, login, register, logout, loading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, register, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
+  return useContext(AuthContext);
+} 

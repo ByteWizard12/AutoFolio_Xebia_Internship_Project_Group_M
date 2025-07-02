@@ -119,9 +119,47 @@ export default function CreatePortfolioPage() {
   }
 
   const handleResumeProcessed = (extractedData) => {
+    console.log("Extracted Data:", extractedData); // Debug log
     setPortfolioData((prev) => ({
       ...prev,
-      ...extractedData,
+      // Affinda mappings
+      fullName: extractedData.name?.raw || prev.fullName,
+      email: extractedData.emails?.[0] || prev.email,
+      phone: extractedData.phoneNumbers?.[0] || prev.phone,
+      linkedinUrl:
+        extractedData.linkedin ||
+        (Array.isArray(extractedData.websites)
+          ? extractedData.websites.find(url => url.includes('linkedin.com'))
+          : undefined) ||
+        prev.linkedinUrl,
+      githubUrl:
+        extractedData.github ||
+        (Array.isArray(extractedData.websites)
+          ? extractedData.websites.find(url => url.includes('github.com'))
+          : undefined) ||
+        prev.githubUrl,
+      // Add more mappings as needed
+      education:
+        Array.isArray(extractedData.education)
+          ? extractedData.education.map(edu => ({
+              degree: edu.accreditation?.inputStr || edu.degree || '',
+              institution: edu.organization || '',
+              startYear: edu.startDate || '',
+              endYear: edu.endDate || '',
+              percentage: edu.percentage || edu.grade || edu.gpa || '',
+              cgpa: edu.cgpa || edu.gpa || '',
+            })).filter(edu => edu.degree || edu.institution)
+          : prev.education,
+      experience: extractedData.workExperience || prev.experience,
+      technicalSkills:
+        Array.isArray(extractedData.skills)
+          ? extractedData.skills.map(skill =>
+              typeof skill === 'string'
+                ? skill
+                : skill.name || ''
+            ).filter(Boolean)
+          : prev.technicalSkills,
+      // Track extracted fields
       extractedFromResume: new Set(Object.keys(extractedData)),
     }))
     toast({
