@@ -30,7 +30,7 @@ export function ResumeUploadSection({ onResumeProcessed }) {
     try {
       const formData = new FormData()
       formData.append("resume", file)
-      const res = await fetch("http://localhost:5000/api/portfolio/upload-resume", {
+      const res = await fetch("http://localhost:5001/api/portfolio/upload-resume", {
         method: "POST",
         body: formData,
       })
@@ -98,7 +98,7 @@ export function ResumeUploadSection({ onResumeProcessed }) {
                   <CheckCircle className="w-5 h-5 text-green-600 mb-1" />
                   <span className="text-green-800 font-medium">Resume uploaded successfully!</span>
                   <a
-                    href={`http://localhost:5000${uploadedFilePath}`}
+                    href={`http://localhost:5001${uploadedFilePath}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline mt-1"

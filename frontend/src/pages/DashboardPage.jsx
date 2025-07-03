@@ -39,6 +39,14 @@ export default function DashboardPage() {
     }
   }, [user, loading, navigate])
 
+  useEffect(() => {
+  const hasPaid = localStorage.getItem("hasPaid")
+  if (!loading && user && hasPaid !== "true") {
+    navigate("/pricing")
+  }
+}, [user, loading, navigate])
+
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
