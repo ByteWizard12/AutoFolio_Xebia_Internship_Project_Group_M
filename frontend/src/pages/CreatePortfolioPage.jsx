@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
@@ -19,6 +19,8 @@ import { ProjectsForm } from "../components/portfolio/ProjectsForm"
 import { ExperienceForm } from "../components/portfolio/ExperienceForm"
 import { EducationForm } from "../components/portfolio/EducationForm"
 import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectionsForm"
+import { useAuth } from "../components/auth-provider"
+
 
 export default function CreatePortfolioPage() {
   const [step, setStep] = useState(1)
@@ -86,6 +88,7 @@ export default function CreatePortfolioPage() {
 
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { user, loading } = useAuth()
   useEffect(() => {
     const hasPaid = localStorage.getItem("hasPaid")
     if (!loading && user && hasPaid !== "true") {
