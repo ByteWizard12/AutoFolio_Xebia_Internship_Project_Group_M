@@ -43,7 +43,8 @@ export function ResumeUploadSection({ onResumeProcessed }) {
       const data = await res.json()
       setUploadedFilePath(data.filePath)
       if (data.extractedDetails && onResumeProcessed) {
-        onResumeProcessed(data.extractedDetails)
+        console.log("Calling onResumeProcessed with", data.extractedDetails);
+        onResumeProcessed(data.extractedDetails, data.huggingFaceError)
       }
     } catch (err) {
       setUploadError("Failed to upload resume. Please try again.")

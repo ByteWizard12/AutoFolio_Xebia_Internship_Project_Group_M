@@ -8,7 +8,7 @@ import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
 import { Upload, FileText, Target, User } from "lucide-react"
 
-export function AboutSectionForm({ data, updateData, extractedFields, isReviewMode = false }) {
+export function AboutSectionForm({ data, updateData, extractedFields, isReviewMode = false, isAboutMeLoading = false }) {
   const handleInputChange = (field, value) => {
     updateData(field, value)
   }
@@ -44,6 +44,12 @@ export function AboutSectionForm({ data, updateData, extractedFields, isReviewMo
             </Badge>
           )}
         </div>
+        {isAboutMeLoading && (
+          <div className="flex items-center space-x-2 mb-2">
+            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+            <span className="text-blue-600 text-sm">Generating About Me...</span>
+          </div>
+        )}
         <Textarea
           id="aboutMe"
           placeholder="Write a compelling paragraph about yourself, your background, and what drives you as a professional..."
@@ -52,9 +58,7 @@ export function AboutSectionForm({ data, updateData, extractedFields, isReviewMo
           className={isExtracted("aboutMe") ? "border-blue-300 bg-blue-50" : ""}
           rows={6}
         />
-        <p className="text-sm text-gray-500">
-          This is your main about section. Aim for 2-3 paragraphs that showcase your personality and expertise.
-        </p>
+    
       </div>
 
       {/* Career Goals */}
@@ -82,13 +86,13 @@ export function AboutSectionForm({ data, updateData, extractedFields, isReviewMo
       </div>
 
       {/* Resume Upload/Link */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4">
         <Label>
           Resume <span className="text-red-500">*</span>
-        </Label>
+        </Label> */}
 
         {/* File Upload */}
-        <Card className="border-dashed">
+        {/* <Card className="border-dashed">
           <CardContent className="p-6">
             <div className="text-center">
               <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -117,17 +121,17 @@ export function AboutSectionForm({ data, updateData, extractedFields, isReviewMo
               )}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* OR Divider */}
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <div className="flex-1 border-t border-gray-300"></div>
           <span className="px-3 text-sm text-gray-500 bg-white">OR</span>
           <div className="flex-1 border-t border-gray-300"></div>
-        </div>
+        </div> */}
 
         {/* Resume Link */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="resumePdfLink">Resume PDF Link</Label>
           <Input
             id="resumePdfLink"
@@ -138,7 +142,7 @@ export function AboutSectionForm({ data, updateData, extractedFields, isReviewMo
           />
           <p className="text-sm text-gray-500">Provide a public link to your resume (Google Drive, Dropbox, etc.)</p>
         </div>
-      </div>
+      </div> */}
 
       {/* Tips Card */}
       <Card className="bg-blue-50 border-blue-200">
