@@ -126,14 +126,77 @@ export default function CreatePortfolioPage() {
     }
   }
 
-  const handleResumeProcessed = (extractedData) => {
-    console.log("Extracted Data:", extractedData); // Debug log
+  // Helper: map certifications (pair each certificate name with the following 'View Certificate' line, and extract link if present)
+  const mapCertifications = (certArr) => {
+    if (!Array.isArray(certArr)) return [];
+    const result = [];
+    for (let i = 0; i < certArr.length; i++) {
+      let cert = certArr[i]?.trim();
+      if (!cert || cert.toLowerCase() === 'view certificate') continue;
+      // If next line is 'View Certificate', pair them
+      let link = '';
+      if (
+        certArr[i + 1] &&
+        typeof certArr[i + 1] === 'string' &&
+        certArr[i + 1].trim().toLowerCase().startsWith('view certificate')
+      ) {
+        // Try to extract URL from the next line if present
+        const urlMatch = certArr[i + 1].match(/(https?:\/\/[^\s]+)/);
+        if (urlMatch) link = urlMatch[0];
+        i++; // Skip the next line
+      }
+      // Also try to extract URL from the current line
+      const urlMatch = cert.match(/(https?:\/\/[^\s]+)/);
+      if (urlMatch) {
+        link = urlMatch[0];
+        cert = cert.replace(urlMatch[0], '').replace(/View Certificate:?/i, '').trim();
+      }
+      result.push({ name: cert, link });
+    }
+    return result;
+  };
+
+  // Helper: extract projects from Affinda sections
+  const mapProjects = (extractedData) => {
+    if (Array.isArray(extractedData.projects) && extractedData.projects.length > 0) {
+      return extractedData.projects;
+    }
+    // Try to extract from sections
+    if (Array.isArray(extractedData.sections)) {
+      const projectSection = extractedData.sections.find(
+        (s) => s.sectionType && s.sectionType.toLowerCase().includes('project')
+      );
+      if (projectSection && projectSection.text) {
+        // Split by double newlines or project titles
+        const lines = projectSection.text.split(/\n{2,}|\n(?=[A-Z][^\n]+\n)/).map(l => l.trim()).filter(Boolean);
+        // Try to parse each project
+        return lines.map(line => {
+          // Try to extract name, tech, and description
+          const nameMatch = line.match(/^[^\n]+/);
+          const name = nameMatch ? nameMatch[0].split('\n')[0] : '';
+          // Try to extract tech stack (comma or | separated)
+          const techMatch = line.match(/([A-Za-z0-9\-\.]+,? ?)+(?=\n|\|)/);
+          const tech = techMatch ? techMatch[0].split(/,|\|/).map(t => t.trim()).filter(Boolean) : [];
+          // Description: everything after the first line
+          const desc = line.split('\n').slice(1).join(' ').trim();
+          return { name, tech, description: desc };
+        });
+      }
+    }
+    return [];
+  };
+
+  const [isAboutMeLoading, setIsAboutMeLoading] = useState(false);
+
+  const handleResumeProcessed = (extractedData, huggingFaceError) => {
+    // Log the full Affinda response for mapping
+    console.log('Affinda extractedDetails:', extractedData);
+    // Map as many fields as possible from extractedData (except About Me)
     setPortfolioData((prev) => ({
       ...prev,
-      // Affinda mappings
-      fullName: extractedData.name?.raw || prev.fullName,
-      email: extractedData.emails?.[0] || prev.email,
-      phone: extractedData.phoneNumbers?.[0] || prev.phone,
+      fullName: extractedData.name?.raw || extractedData.fullName || prev.fullName,
+      email: extractedData.emails?.[0] || extractedData.email || prev.email,
+      phone: extractedData.phoneNumbers?.[0] || extractedData.phone || prev.phone,
       linkedinUrl:
         extractedData.linkedin ||
         (Array.isArray(extractedData.websites)
@@ -146,7 +209,6 @@ export default function CreatePortfolioPage() {
           ? extractedData.websites.find(url => url.includes('github.com'))
           : undefined) ||
         prev.githubUrl,
-      // Add more mappings as needed
       education:
         Array.isArray(extractedData.education)
           ? extractedData.education.map(edu => ({
@@ -158,7 +220,7 @@ export default function CreatePortfolioPage() {
               cgpa: edu.cgpa || edu.gpa || '',
             })).filter(edu => edu.degree || edu.institution)
           : prev.education,
-      experience: extractedData.workExperience || prev.experience,
+      experience: extractedData.workExperience || extractedData.experience || prev.experience,
       technicalSkills:
         Array.isArray(extractedData.skills)
           ? extractedData.skills.map(skill =>
@@ -167,15 +229,45 @@ export default function CreatePortfolioPage() {
                 : skill.name || ''
             ).filter(Boolean)
           : prev.technicalSkills,
-      // Track extracted fields
+      softSkills: extractedData.softSkills || prev.softSkills,
+      toolsAndTech: extractedData.toolsAndTech || prev.toolsAndTech,
+      projects: mapProjects(extractedData),
+      awards: extractedData.awards || prev.awards,
+      certifications: mapCertifications(extractedData.certifications),
+      careerGoals: extractedData.careerGoals || prev.careerGoals,
+      // About Me will be handled separately
       extractedFromResume: new Set(Object.keys(extractedData)),
     }))
-    toast({
-      title: "Resume processed successfully!",
-      description: "Your information has been extracted. You can review and edit it.",
-      duration: 3000,
+    setIsAboutMeLoading(true);
+    // Trigger About Me generation as a separate async step
+    fetch('http://localhost:5000/api/portfolio/generate-about-me', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ extractedData }),
     })
-    handleNext()
+      .then(res => res.json())
+      .then(data => {
+        setPortfolioData(prev => ({ ...prev, aboutMe: data.aboutMe || prev.aboutMe }));
+      })
+      .catch(() => {
+        // fallback: do nothing, About Me remains empty
+      })
+      .finally(() => setIsAboutMeLoading(false));
+    if (huggingFaceError) {
+      toast({
+        title: "AI Generation Warning",
+        description: `Some AI-generated fields may be missing: ${huggingFaceError}`,
+        variant: "destructive",
+        duration: 6000,
+      })
+    } else {
+      toast({
+        title: "Resume processed successfully!",
+        description: "Your information has been extracted. You can review and edit it.",
+        duration: 3000,
+      })
+    }
+    handleNext();
   }
 
   const updatePortfolioData = (section, data) => {
@@ -189,8 +281,6 @@ export default function CreatePortfolioPage() {
     // Validate required fields
     const requiredFields = {
       fullName: portfolioData.fullName,
-      currentRole: portfolioData.currentRole,
-      shortBio: portfolioData.shortBio,
       email: portfolioData.email,
       linkedinUrl: portfolioData.linkedinUrl,
       githubUrl: portfolioData.githubUrl,
@@ -366,6 +456,7 @@ export default function CreatePortfolioPage() {
             data={portfolioData}
             updateData={updatePortfolioData}
             extractedFields={portfolioData.extractedFromResume}
+            isAboutMeLoading={isAboutMeLoading}
           />
         )
 

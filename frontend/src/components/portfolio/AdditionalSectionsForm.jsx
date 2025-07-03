@@ -141,36 +141,24 @@ export function AdditionalSectionsForm({ data, updateData, extractedFields, isRe
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Existing Certifications */}
-              {data.certifications && data.certifications.length > 0 && (
+              {/* Autofilled Certifications from Resume */}
+              {Array.isArray(data.certifications) && data.certifications.length > 0 && (
                 <div className="space-y-3">
-                  {data.certifications.map((cert) => (
-                    <Card key={cert.id} className="border-l-4 border-l-blue-500">
+                  {data.certifications.map((cert, idx) => (
+                    <Card key={cert.id || idx} className="border-l-4 border-l-blue-500">
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{cert.title}</h4>
-                            {cert.platform && <p className="text-sm text-gray-600">{cert.platform}</p>}
-                            {cert.date && <p className="text-xs text-gray-500">{cert.date}</p>}
-                            {cert.link && (
-                              <a
-                                href={cert.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 text-sm hover:underline flex items-center mt-1"
-                              >
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                View Certificate
-                              </a>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeCertification(cert.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium text-base mb-1">{cert.name}</span>
+                          {cert.link && (
+                            <a
+                              href={cert.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline text-sm mt-1"
+                            >
+                              View Certificate
+                            </a>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
