@@ -86,8 +86,6 @@ export default function CreatePortfolioPage() {
 
   const { toast } = useToast()
   const navigate = useNavigate()
-//edit By vaibhav Krishna
-
   useEffect(() => {
     const hasPaid = localStorage.getItem("hasPaid")
     if (!loading && user && hasPaid !== "true") {
@@ -95,7 +93,7 @@ export default function CreatePortfolioPage() {
     }
   }, [user, loading, navigate])
 
-  //edit till this line 
+  
 
   const steps = [
     { id: 1, title: "Data Source", description: "Choose how to provide your information" },

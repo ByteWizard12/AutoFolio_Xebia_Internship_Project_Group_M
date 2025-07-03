@@ -1,4 +1,3 @@
-//full page ADD by vaibhav 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -9,12 +8,12 @@ export default function PricingPage() {
 
   const handleBuy = async () => {
     try {
-      // Call backend to create Razorpay order
-      const res = await axios.post(
-        "http://localhost:5001/api/payment/create-order", 
-        { amount: 199 } // amount in rupees
-      );
+      // Step 1: Call backend to create Razorpay order
+      const res = await axios.post("http://localhost:5001/api/payment/create-order", {
+        amount: 199, // ₹199
+      });
 
+      // Step 2: Prepare Razorpay options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: res.data.amount,
@@ -22,11 +21,43 @@ export default function PricingPage() {
         name: "AutoFolio",
         description: "Pro Plan Access",
         order_id: res.data.id,
-        handler: function (response) {
-          alert("Payment Successful!");
-          localStorage.setItem("hasPaid", "true");
-          navigate("/dashboard");
+
+        handler: async function (response) {
+          try {
+            // Step 3: Call backend to activate subscription
+            const token = localStorage.getItem("token");
+
+            const activateRes = await fetch(
+              "http://localhost:5001/api/payment/activate-subscription",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  token,
+                },
+                body: JSON.stringify({
+                  subscriptionId: response.razorpay_order_id, // Using order ID for now
+                  planId: "pro-plan-199", // Optional: set your own plan ID
+                }),
+              }
+            );
+
+            const data = await activateRes.json();
+
+            if (activateRes.ok) {
+              alert("✅ Payment & Activation Successful!");
+              localStorage.setItem("hasPaid", "true");
+              navigate("/dashboard");
+            } else {
+              console.error("Activation failed:", data);
+              alert("Payment successful but activation failed: " + data.error);
+            }
+          } catch (err) {
+            console.error("Error during activation:", err);
+            alert("Something went wrong while activating your plan.");
+          }
         },
+
         prefill: {
           name: "User",
           email: "user@example.com",
@@ -37,14 +68,16 @@ export default function PricingPage() {
         },
       };
 
+      // Step 4: Open Razorpay popup
       const razor = new window.Razorpay(options);
       razor.open();
     } catch (error) {
-      alert("Payment failed");
-      console.error(error);
+      alert("Payment failed. Please try again.");
+      console.error("Payment error:", error);
     }
   };
 
+  // 🚦 Redirect if already paid
   useEffect(() => {
     const hasPaid = localStorage.getItem("hasPaid");
     if (hasPaid === "true") {
@@ -65,5 +98,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-// till this line add by vaibhav

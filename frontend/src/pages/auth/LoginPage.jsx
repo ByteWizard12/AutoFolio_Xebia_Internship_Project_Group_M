@@ -24,29 +24,59 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const success = await login(email, password)
-      if (success) {
-        toast({
-          title: "Welcome back! 🎉",
-          description: "You have been successfully logged in.",
-          variant: "success",
-          duration: 4000, // 4 seconds
-        })
-        navigate("/dashboard")
-      } else {
+      const response = await login(email, password)
+      console.log("📦 Login response:", response)
+
+      if (response?.success && response?.user) {
+        const { isActive } = response.user
+
+        if (isActive) {
+          toast({
+            title: "Welcome back! 🎉",
+            description: "You have been successfully logged in.",
+            variant: "success",
+          })
+          return navigate("/dashboard")
+        } else {
+          toast({
+            title: "Subscription required",
+            description: "Your subscription is inactive. Please subscribe to continue.",
+            variant: "destructive",
+          })
+          return navigate("/pricing")
+        }
+      }
+
+      if (response?.status === 401) {
         toast({
           title: "Login failed",
           description: "Invalid email or password.",
           variant: "destructive",
-          duration: 6000, // 6 seconds for errors
         })
+        return
       }
-    } catch (error) {
+
+      // Handle 403 with message
+      if (response?.status === 403 && response?.message === "Subscription required") {
+        toast({
+          title: "Subscription required",
+          description: "Please subscribe to continue using your account.",
+          variant: "destructive",
+        })
+        return navigate("/pricing")
+      }
+
+      toast({
+        title: "Unexpected error",
+        description: response?.message || "Please try again later.",
+        variant: "destructive",
+      })
+    } catch (err) {
+      console.error("🔥 Login error:", err)
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
-        duration: 6000,
       })
     } finally {
       setLoading(false)
@@ -54,7 +84,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-4">
@@ -68,7 +98,7 @@ export default function LoginPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Welcome Back</CardTitle>
-            <CardDescription>Sign in to your account to continue building amazing portfolios</CardDescription>
+            <CardDescription>Sign in to continue building amazing portfolios</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -77,7 +107,6 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -89,7 +118,6 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -98,7 +126,7 @@ export default function LoginPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -116,7 +144,7 @@ export default function LoginPage() {
             </form>
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
+                Don’t have an account?{" "}
                 <Link to="/auth/register" className="text-blue-600 hover:underline">
                   Sign up
                 </Link>
