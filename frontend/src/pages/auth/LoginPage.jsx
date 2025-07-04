@@ -25,23 +25,20 @@ export default function LoginPage() {
 
     try {
       const response = await login(email, password)
-      console.log("📦 Login response:", response)
 
       if (response?.success && response?.user) {
         const { isActive } = response.user
 
         if (isActive) {
           toast({
-            title: "Welcome back! 🎉",
+            title: "Welcome back!",
             description: "You have been successfully logged in.",
-            variant: "success",
           })
           return navigate("/dashboard")
         } else {
           toast({
-            title: "Subscription required",
-            description: "Your subscription is inactive. Please subscribe to continue.",
-            variant: "destructive",
+            title: "Welcome!",
+            description: "Please choose a subscription plan to continue.",
           })
           return navigate("/pricing")
         }
@@ -50,7 +47,7 @@ export default function LoginPage() {
       if (response?.status === 401) {
         toast({
           title: "Login failed",
-          description: "Invalid email or password.",
+          description: "Email or password is incorrect. If you don't have an account, please register first.",
           variant: "destructive",
         })
         return
@@ -144,7 +141,7 @@ export default function LoginPage() {
             </form>
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link to="/auth/register" className="text-blue-600 hover:underline">
                   Sign up
                 </Link>

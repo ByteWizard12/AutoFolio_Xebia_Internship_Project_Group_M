@@ -243,7 +243,7 @@ export default function CreatePortfolioPage() {
     }))
     setIsAboutMeLoading(true);
     // Trigger About Me generation as a separate async step
-    fetch('http://localhost:5000/api/portfolio/generate-about-me', {
+            fetch('http://localhost:5001/api/portfolio/generate-about-me', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extractedData }),

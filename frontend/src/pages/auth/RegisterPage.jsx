@@ -48,14 +48,23 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      console.log({ name, email, password });
-      const success = await register(name, email, password)
-      if (success) {
+      const result = await register(name, email, password)
+      if (result.success) {
         toast({
           title: "Account created!",
-          description: "Welcome to AutoPort. Let's build your first portfolio.",
+          description: "Please log in to continue to your account.",
         })
-        navigate("/dashboard")
+        navigate("/auth/login")
+      } else if (
+        result.error &&
+        (result.error.error === "Email already registered" ||
+         (result.error.details && result.error.details.some(e => e.message === "Email already registered")))
+      ) {
+        toast({
+          title: "User already exists",
+          description: "An account with this email already exists. Please log in or use a different email.",
+          variant: "destructive",
+        })
       } else {
         toast({
           title: "Registration failed",

@@ -22,11 +22,9 @@ const loginSchema = z.object({
 // 📩 REGISTER ROUTE
 router.post('/register', async (req, res) => {
   try {
-    console.log("📩 Register request received:", req.body);
-
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.log("❌ Validation error:", parsed.error.errors);
+      console.log("Validation error:", parsed.error.errors);
       return res.status(400).json({ error: 'Invalid input', details: parsed.error.errors });
     }
 
@@ -34,7 +32,7 @@ router.post('/register', async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("⚠️ User already exists:", email);
+      console.log("User already exists:", email);
       return res.status(409).json({ error: 'Email already registered' });
     }
 
@@ -49,7 +47,7 @@ router.post('/register', async (req, res) => {
     });
 
     await newUser.save();
-    console.log("✅ User created:", email);
+    console.log("User created:", email);
 
     if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET not set");
 
@@ -68,7 +66,7 @@ router.post('/register', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("🔥 Registration error:", err.message);
+    console.error("Registration error:", err.message);
     return res.status(500).json({ error: 'Server error' });
   }
 });
@@ -76,11 +74,9 @@ router.post('/register', async (req, res) => {
 // 🔐 LOGIN ROUTE
 router.post('/login', async (req, res) => {
   try {
-    console.log("🔐 Login request received:", req.body);
-
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.log("❌ Validation error:", parsed.error.errors);
+      console.log("Validation error:", parsed.error.errors);
       return res.status(400).json({ error: 'Invalid input', details: parsed.error.errors });
     }
 
@@ -88,13 +84,13 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("❌ User not found:", email);
+      console.log("User not found:", email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      console.log("❌ Incorrect password for:", email);
+      console.log("Incorrect password for:", email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -107,7 +103,7 @@ router.post('/login', async (req, res) => {
       expiresIn: '1d',
     });
 
-    console.log(`✅ Login successful for ${email} | Subscription: ${subscriptionStatus}`);
+    console.log(`Login successful for ${email} | Subscription: ${subscriptionStatus}`);
 
     return res.status(isActive ? 200 : 403).json({
       token,
@@ -120,7 +116,49 @@ router.post('/login', async (req, res) => {
       message: isActive ? 'Login successful' : 'Subscription required',
     });
   } catch (err) {
-    console.error("🔥 Login error:", err.message);
+    console.error("Login error:", err.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// 🔍 GET CURRENT USER ROUTE
+router.get('/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET not set");
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const subscriptionStatus = user.subscription?.status || 'inactive';
+    const isActive = subscriptionStatus === 'active';
+
+    return res.status(200).json({
+      name: user.name,
+      email: user.email,
+      subscription: subscriptionStatus,
+      isActive,
+    });
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    console.error("/me route error:", err.message);
     return res.status(500).json({ error: 'Server error' });
   }
 });

@@ -34,12 +34,12 @@ app.post("/api/subscription/webhook", async (req, res) => {
       .digest("hex");
 
     if (signature !== expectedSignature) {
-      console.warn("❌ Invalid Razorpay signature");
+      console.warn("Invalid Razorpay signature");
       return res.status(400).json({ message: "Invalid signature" });
     }
 
     const event = JSON.parse(rawBody.toString());
-    console.log("📩 Razorpay Event:", event.event);
+    console.log("Razorpay Event:", event.event);
 
     if (event.event === "subscription.charged") {
       const sub = event.payload.subscription.entity;
@@ -54,12 +54,12 @@ app.post("/api/subscription/webhook", async (req, res) => {
         }
       );
 
-      console.log("✅ Subscription updated for user with Razorpay sub ID:", sub.id);
+      console.log("Subscription updated for user with Razorpay sub ID:", sub.id);
     }
 
     res.status(200).json({ received: true });
   } catch (err) {
-    console.error("💥 Webhook Error:", err);
+    console.error("Webhook Error:", err);
     res.status(500).json({ error: "Webhook handling failed" });
   }
 });
@@ -77,10 +77,10 @@ app.use("/api/user", userRoutes); // includes /me/subscription
 // ✅ 4. Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // ✅ 5. Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

@@ -31,10 +31,10 @@ router.post("/create-order", async (req, res) => {
     };
 
     const order = await razorpay.orders.create(options);
-    console.log("✅ Razorpay order created:", order.id);
+    console.error("Razorpay order created:", order.id);
     res.status(200).json(order);
   } catch (error) {
-    console.error("💥 Razorpay order creation error:", error);
+    console.error("Razorpay order creation error:", error);
     res.status(500).json({ error: "Error creating Razorpay order" });
   }
 });
@@ -73,7 +73,7 @@ router.post("/activate-subscription", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    console.log("✅ Subscription activated for:", updatedUser.email);
+    console.log("Subscription activated for:", updatedUser.email);
 
     return res.status(200).json({
       message: "Subscription activated",
@@ -84,7 +84,7 @@ router.post("/activate-subscription", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("💥 Subscription activation error:", err);
+    console.error("Subscription activation error:", err);
     return res.status(500).json({ error: "Subscription activation failed" });
   }
 });

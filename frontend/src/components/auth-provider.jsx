@@ -91,8 +91,8 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        console.warn("❌ Login failed:", data);
+      if (!res.ok && res.status !== 403) {
+        console.warn("Login failed:", data);
         localStorage.removeItem("token");
         localStorage.removeItem("hasPaid");
         return {
@@ -102,11 +102,14 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // ✅ Save token & user
+      // Handle both 200 (active) and 403 (inactive) as success
+      const isActive = res.status === 200;
+      
+      // Save token & user
       localStorage.setItem("token", data.token);
       setUser(data.user);
 
-      // ✅ Fetch subscription
+      // Fetch subscription
       const subRes = await fetch("http://localhost:5001/api/user/me/subscription", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
@@ -120,15 +123,15 @@ export function AuthProvider({ children }) {
         setSubscription(null);
       }
 
-      const isActive = subData?.status === "active";
-      localStorage.setItem("hasPaid", isActive ? "true" : "false");
+      const finalIsActive = subData?.status === "active" || isActive;
+      localStorage.setItem("hasPaid", finalIsActive ? "true" : "false");
 
       return {
         success: true,
         token: data.token,
         user: {
           ...data.user,
-          isActive,
+          isActive: finalIsActive,
         },
       };
     } catch (err) {
