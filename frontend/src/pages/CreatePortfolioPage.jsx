@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { useToast } from "../hooks/use-toast"
-import { ArrowRight, ArrowLeft, Zap, Upload, FileCheck, Edit3, Eye, Download, Share2 } from "lucide-react"
+import { ArrowRight, ArrowLeft, Zap, Upload, FileCheck, Edit3 } from "lucide-react"
 import { TemplateSelector3D } from "../components/3d/template-selector-3d"
 
 // Import all form components
@@ -21,12 +21,11 @@ import { EducationForm } from "../components/portfolio/EducationForm"
 import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectionsForm"
 import { useAuth } from "../components/auth-provider"
 
+
 export default function CreatePortfolioPage() {
   const [step, setStep] = useState(1)
   const [dataSource, setDataSource] = useState(null) // 'resume' or 'manual'
   const [autoOpenFilePicker, setAutoOpenFilePicker] = useState(false)
-  const [generatedPortfolio, setGeneratedPortfolio] = useState(null)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [portfolioData, setPortfolioData] = useState({
     // Personal Info
     fullName: "",
@@ -90,13 +89,14 @@ export default function CreatePortfolioPage() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { user, loading } = useAuth()
-  
   useEffect(() => {
     const hasPaid = localStorage.getItem("hasPaid")
     if (!loading && user && hasPaid !== "true") {
       navigate("/pricing")
     }
   }, [user, loading, navigate])
+
+  
 
   const steps = [
     { id: 1, title: "Data Source", description: "Choose how to provide your information" },
@@ -109,7 +109,6 @@ export default function CreatePortfolioPage() {
     { id: 8, title: "Education", description: "Educational background" },
     { id: 9, title: "Additional", description: "Certifications, awards, etc." },
     { id: 10, title: "Template", description: "Choose your template" },
-    { id: 11, title: "Preview", description: "Review and generate your portfolio" },
   ]
 
   const handleNext = () => {
@@ -130,23 +129,26 @@ export default function CreatePortfolioPage() {
     }
   }
 
-  // Helper: map certifications
+  // Helper: map certifications (pair each certificate name with the following 'View Certificate' line, and extract link if present)
   const mapCertifications = (certArr) => {
     if (!Array.isArray(certArr)) return [];
     const result = [];
     for (let i = 0; i < certArr.length; i++) {
       let cert = certArr[i]?.trim();
       if (!cert || cert.toLowerCase() === 'view certificate') continue;
+      // If next line is 'View Certificate', pair them
       let link = '';
       if (
         certArr[i + 1] &&
         typeof certArr[i + 1] === 'string' &&
         certArr[i + 1].trim().toLowerCase().startsWith('view certificate')
       ) {
+        // Try to extract URL from the next line if present
         const urlMatch = certArr[i + 1].match(/(https?:\/\/[^\s]+)/);
         if (urlMatch) link = urlMatch[0];
-        i++;
+        i++; // Skip the next line
       }
+      // Also try to extract URL from the current line
       const urlMatch = cert.match(/(https?:\/\/[^\s]+)/);
       if (urlMatch) {
         link = urlMatch[0];
@@ -162,17 +164,23 @@ export default function CreatePortfolioPage() {
     if (Array.isArray(extractedData.projects) && extractedData.projects.length > 0) {
       return extractedData.projects;
     }
+    // Try to extract from sections
     if (Array.isArray(extractedData.sections)) {
       const projectSection = extractedData.sections.find(
         (s) => s.sectionType && s.sectionType.toLowerCase().includes('project')
       );
       if (projectSection && projectSection.text) {
+        // Split by double newlines or project titles
         const lines = projectSection.text.split(/\n{2,}|\n(?=[A-Z][^\n]+\n)/).map(l => l.trim()).filter(Boolean);
+        // Try to parse each project
         return lines.map(line => {
+          // Try to extract name, tech, and description
           const nameMatch = line.match(/^[^\n]+/);
           const name = nameMatch ? nameMatch[0].split('\n')[0] : '';
+          // Try to extract tech stack (comma or | separated)
           const techMatch = line.match(/([A-Za-z0-9\-\.]+,? ?)+(?=\n|\|)/);
           const tech = techMatch ? techMatch[0].split(/,|\|/).map(t => t.trim()).filter(Boolean) : [];
+          // Description: everything after the first line
           const desc = line.split('\n').slice(1).join(' ').trim();
           return { name, tech, description: desc };
         });
@@ -184,7 +192,9 @@ export default function CreatePortfolioPage() {
   const [isAboutMeLoading, setIsAboutMeLoading] = useState(false);
 
   const handleResumeProcessed = (extractedData, huggingFaceError) => {
+    // Log the full Affinda response for mapping
     console.log('Affinda extractedDetails:', extractedData);
+    // Map as many fields as possible from extractedData (except About Me)
     setPortfolioData((prev) => ({
       ...prev,
       fullName: extractedData.name?.raw || extractedData.fullName || prev.fullName,
@@ -228,11 +238,12 @@ export default function CreatePortfolioPage() {
       awards: extractedData.awards || prev.awards,
       certifications: mapCertifications(extractedData.certifications),
       careerGoals: extractedData.careerGoals || prev.careerGoals,
+      // About Me will be handled separately
       extractedFromResume: new Set(Object.keys(extractedData)),
     }))
-    
     setIsAboutMeLoading(true);
-    fetch('http://localhost:5001/api/portfolio/generate-about-me', {
+    // Trigger About Me generation as a separate async step
+            fetch('http://localhost:5001/api/portfolio/generate-about-me', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extractedData }),
@@ -242,10 +253,9 @@ export default function CreatePortfolioPage() {
         setPortfolioData(prev => ({ ...prev, aboutMe: data.aboutMe || prev.aboutMe }));
       })
       .catch(() => {
-        // fallback: do nothing
+        // fallback: do nothing, About Me remains empty
       })
       .finally(() => setIsAboutMeLoading(false));
-    
     if (huggingFaceError) {
       toast({
         title: "AI Generation Warning",
@@ -270,7 +280,7 @@ export default function CreatePortfolioPage() {
     }))
   }
 
-  const handleGeneratePortfolio = async () => {
+  const handleSubmit = async () => {
     // Validate required fields
     const requiredFields = {
       fullName: portfolioData.fullName,
@@ -297,59 +307,51 @@ export default function CreatePortfolioPage() {
       return
     }
 
-    setIsGenerating(true)
-
     try {
+      // Create portfolio in backend
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5001/api/portfolio-generator/generate', {
+      const portfolioPayload = {
+        name: portfolioData.fullName + "'s Portfolio",
+        template: portfolioData.template,
+        resumeId: portfolioData.resumeId // This will be undefined if no resume was uploaded
+      }
+
+      const response = await fetch('http://localhost:8000/api/v1/portfolio/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'token': token
         },
-        body: JSON.stringify({
-          portfolioData,
-          template: portfolioData.template
-        })
+        body: JSON.stringify(portfolioPayload)
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate portfolio')
+        throw new Error(errorData.message || 'Failed to create portfolio')
       }
 
       const result = await response.json()
-      setGeneratedPortfolio(result)
 
       toast({
-        title: "Portfolio generated successfully!",
-        description: "Your portfolio is ready for preview and download.",
-        variant: "success",
+        title: "Portfolio created successfully!",
+        description: "Redirecting to the editor...",
         duration: 3000,
       })
 
+      // Save portfolio data to localStorage for editing
+      localStorage.setItem("portfolioData", JSON.stringify(portfolioData))
+      localStorage.setItem("portfolioId", result.portfolioId)
+      
+      navigate("/edit/new")
+
     } catch (error) {
-      console.error('Error generating portfolio:', error)
+      console.error('Error creating portfolio:', error)
       toast({
-        title: "Failed to generate portfolio",
+        title: "Failed to create portfolio",
         description: error.message || "Please try again",
         variant: "destructive",
         duration: 5000,
       })
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const handlePreviewPortfolio = () => {
-    if (generatedPortfolio?.previewUrl) {
-      window.open(`http://localhost:5001${generatedPortfolio.previewUrl}`, '_blank')
-    }
-  }
-
-  const handleDownloadPortfolio = () => {
-    if (generatedPortfolio?.downloadUrl) {
-      window.open(`http://localhost:5001${generatedPortfolio.downloadUrl}`, '_blank')
     }
   }
 
@@ -364,6 +366,7 @@ export default function CreatePortfolioPage() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
+              {/* Resume Upload Option */}
               <Card
                 className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-500"
                 onClick={() => handleDataSourceSelect("resume")}
@@ -390,6 +393,7 @@ export default function CreatePortfolioPage() {
                 </CardContent>
               </Card>
 
+              {/* Manual Entry Option */}
               <Card
                 className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-green-500"
                 onClick={() => handleDataSourceSelect("manual")}
@@ -524,99 +528,6 @@ export default function CreatePortfolioPage() {
           </div>
         )
 
-      case 11:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">Review & Generate Portfolio</h2>
-              <p className="text-gray-600">Review your information and generate your portfolio website</p>
-            </div>
-
-            {/* Portfolio Summary */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Portfolio Summary</h3>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p><strong>Name:</strong> {portfolioData.fullName || 'Not provided'}</p>
-                    <p><strong>Role:</strong> {portfolioData.currentRole || 'Not provided'}</p>
-                    <p><strong>Email:</strong> {portfolioData.email || 'Not provided'}</p>
-                    <p><strong>Template:</strong> {portfolioData.template}</p>
-                  </div>
-                  <div>
-                    <p><strong>Skills:</strong> {portfolioData.technicalSkills?.length || 0} technical skills</p>
-                    <p><strong>Projects:</strong> {portfolioData.projects?.length || 0} projects</p>
-                    <p><strong>Experience:</strong> {portfolioData.experience?.length || 0} positions</p>
-                    <p><strong>Education:</strong> {portfolioData.education?.length || 0} entries</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Generate Button */}
-            {!generatedPortfolio && (
-              <div className="text-center">
-                <Button 
-                  onClick={handleGeneratePortfolio} 
-                  disabled={isGenerating}
-                  size="lg"
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating Portfolio...
-                    </>
-                  ) : (
-                    <>
-                      Generate Portfolio
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {/* Generated Portfolio Actions */}
-            {generatedPortfolio && (
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-lg font-semibold text-green-800 mb-4">
-                    🎉 Portfolio Generated Successfully!
-                  </h3>
-                  <p className="text-green-700 mb-6">
-                    Your portfolio website has been created. You can now preview it or download the HTML file.
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Button onClick={handlePreviewPortfolio} variant="outline">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview Portfolio
-                    </Button>
-                    <Button onClick={handleDownloadPortfolio}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download HTML
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(`http://localhost:5001${generatedPortfolio.previewUrl}`)
-                        toast({
-                          title: "Link copied!",
-                          description: "Portfolio link copied to clipboard",
-                          duration: 2000,
-                        })
-                      }}
-                      variant="outline"
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Copy Link
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )
-
       default:
         return null
     }
@@ -681,9 +592,14 @@ export default function CreatePortfolioPage() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Previous
               </Button>
-              {step < steps.length && (
+              {step < steps.length ? (
                 <Button onClick={handleNext}>
                   Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700">
+                  Create Portfolio
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}

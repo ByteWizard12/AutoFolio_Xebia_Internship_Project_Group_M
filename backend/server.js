@@ -14,7 +14,6 @@ const userRoutes = require("./routes/user");
 const portfolioRoutes = require("./routes/portfolio");
 const paymentRoutes = require("./routes/payment");
 const subscriptionRoutes = require("./routes/subscription");
-const portfolioGeneratorRoutes = require("./routes/portfolio-generator");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -73,8 +72,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/portfolio", portfolioRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subscription", subscriptionRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/portfolio-generator", portfolioGeneratorRoutes);
+app.use("/api/user", userRoutes); // includes /me/subscription
 
 // ✅ 4. Connect to MongoDB
 mongoose
