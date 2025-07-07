@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= fullName %> - Portfolio</title>
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --background: #f8fafc;
+      --surface: #ffffff;
+      --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--background);
+      color: var(--text-dark);
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 80px 20px;
+    }
+
+    /* Header Styles */
+    .header {
+      background: var(--gradient);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-content {
+      color: white;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .subtitle {
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      opacity: 0.95;
+    }
+
+    .bio {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      max-width: 600px;
+    }
+
+    /* Section Styles */
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--gradient);
+      border-radius: 2px;
+    }
+
+    .section-title i {
+      margin-right: 12px;
+      color: var(--primary);
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Vector Images */
+    .vector-img {
+      max-width: 100%;
+      height: 200px;
+      object-fit: contain;
+      margin-bottom: 32px;
+      opacity: 0.8;
+      border-radius: 16px;
+      background: var(--gradient-light);
+      padding: 20px;
+    }
+
+    /* Skills Styles */
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .skills .badge {
+      background: var(--gradient);
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: 50px;
+      border: none;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .skills .badge:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Card Styles */
+    .card-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card strong {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .card small {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Contact Styles */
+    .contact {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .contact p {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .contact p:last-child {
+      border-bottom: none;
+    }
+
+    .contact i {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .contact a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .contact a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 80px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Section spacing */
+    .mb-5 {
+      margin-bottom: 80px !important;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 16px;
+      }
+
+      .header {
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .main-title {
+        font-size: 2.5rem;
+      }
+
+      .section-title {
+        font-size: 1.75rem;
+      }
+
+      .card-list {
+        grid-template-columns: 1fr;
+      }
+
+      .skills {
+        justify-content: center;
+      }
+
+      .vector-img {
+        height: 150px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-title {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      .contact {
+        padding: 24px;
+      }
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .mb-5 {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Enhanced header layout */
+    .header .d-flex {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Better spacing for sections */
+    .section-content {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="d-flex align-items-center gap-4 flex-column flex-md-row text-center text-md-start">
+        <div class="avatar"><%= fullName ? fullName.charAt(0) : 'U' %></div>
+        <div class="header-content">
+          <div class="main-title"><%= fullName %></div>
+          <div class="subtitle"><i class="bi bi-briefcase-fill"></i> <%= currentRole %></div>
+          <div class="bio"><%= shortBio %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-person-fill"></i> About Me</div>
+      <div class="section-content">
+        <!-- <img src="/placeholder.svg?height=200&width=400&text=About+Me" alt="About Me" class="vector-img"> -->
+        <p><%= aboutMe %></p>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-code-slash"></i> Skills</div>
+      <div class="skills d-flex flex-wrap">
+        <% technicalSkills.forEach(skill => { %>
+          <span class="badge text-light rounded-pill"><%= skill %></span>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Experience -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-building"></i> Experience</div>
+      <div class="card-list">
+        <% experience.forEach(exp => { %>
+          <div class="card">
+            <strong><%= exp.jobTitle %></strong> at <%= exp.companyName %><br />
+            <small class="text-muted"><i class="bi bi-calendar-week"></i> <%= exp.duration %></small>
+            <p class="mt-2 mb-0"><%= exp.responsibilities %></p>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-kanban-fill"></i> Projects</div>
+      <!-- <img src="/placeholder.svg?height=200&width=400&text=My+Projects" alt="Projects" class="vector-img"> -->
+      <div class="card-list">
+        <% projects.forEach(proj => { %>
+          <div class="card">
+            <strong><%= proj.name %></strong>
+            <p class="mb-1"><%= proj.description %></p>
+            <small class="text-muted"><i class="bi bi-tools"></i> Tech: <%= proj.techStack.join(', ') %></small>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-mortarboard-fill"></i> Education</div>
+      <div class="card-list">
+        <% education.forEach(edu => { %>
+          <div class="card">
+            <strong><%= edu.degree %></strong> at <%= edu.institution %><br />
+            <small class="text-muted"><i class="bi bi-calendar-week"></i> <%= edu.duration %></small>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="mb-5">
+      <div class="section-title"><i class="bi bi-envelope-paper-fill"></i> Contact</div>
+      <!-- <img src="/placeholder.svg?height=200&width=400&text=Get+In+Touch" alt="Contact" class="vector-img"> -->
+      <div class="contact">
+        <p><i class="bi bi-envelope-fill"></i> <span>Email: <a href="mailto:<%= email %>"><%= email %></a></span></p>
+        <p><i class="bi bi-linkedin"></i> <span>LinkedIn: <a href="<%= linkedinUrl %>" target="_blank"><%= linkedinUrl %></a></span></p>
+        <p><i class="bi bi-github"></i> <span>GitHub: <a href="<%= githubUrl %>" target="_blank"><%= githubUrl %></a></span></p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      &copy; <%= new Date().getFullYear() %> <%= fullName %>. All rights reserved.
+    </footer>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

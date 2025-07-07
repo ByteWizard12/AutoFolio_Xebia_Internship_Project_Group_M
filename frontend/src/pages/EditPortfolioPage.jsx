@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
@@ -12,59 +12,131 @@ import { Badge } from "../components/ui/badge"
 import { useToast } from "../hooks/use-toast"
 import { Eye, Save, Download, Share2, Settings, Zap } from "lucide-react"
 import { PortfolioPreview3D } from "../components/3d/portfolio-preview-3d"
+// Import all form components
+import { PersonalInfoForm } from "../components/portfolio/PersonalInfoForm"
+import { ContactInfoForm } from "../components/portfolio/ContactInfoForm"
+import { AboutSectionForm } from "../components/portfolio/AboutSectionForm"
+import { SkillsForm } from "../components/portfolio/SkillsForm"
+import { ProjectsForm } from "../components/portfolio/ProjectsForm"
+import { ExperienceForm } from "../components/portfolio/ExperienceForm"
+import { EducationForm } from "../components/portfolio/EducationForm"
+import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectionsForm"
 
 export default function EditPortfolioPage() {
   const { id } = useParams()
   const { toast } = useToast()
   const [portfolioData, setPortfolioData] = useState({
-    name: "John Doe",
-    title: "Full Stack Developer",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    bio: "Passionate full-stack developer with 5+ years of experience building scalable web applications. I love creating user-friendly interfaces and robust backend systems.",
-    skills: ["React", "Node.js", "TypeScript", "Python", "AWS", "MongoDB"],
-    experience: [
-      {
-        title: "Senior Full Stack Developer",
-        company: "Tech Corp",
-        duration: "2022 - Present",
-        description: "Led development of microservices architecture serving 1M+ users",
-      },
-      {
-        title: "Software Developer",
-        company: "StartupXYZ",
-        duration: "2020 - 2022",
-        description: "Built responsive web applications using React and Node.js",
-      },
-    ],
-    education: [
-      {
-        degree: "Bachelor of Computer Science",
-        school: "University of Technology",
-        year: "2020",
-      },
-    ],
-    projects: [
-      {
-        name: "E-commerce Platform",
-        description: "Full-stack e-commerce solution with payment integration",
-        tech: ["React", "Node.js", "Stripe"],
-        url: "https://github.com/johndoe/ecommerce",
-      },
-    ],
-    social: {
-      github: "https://github.com/johndoe",
-      linkedin: "https://linkedin.com/in/johndoe",
-      website: "https://johndoe.dev",
-    },
+    fullName: "",
+    currentRole: "",
+    shortBio: "",
+    location: "",
+    profilePicture: "",
+    email: "",
+    phone: "",
+    linkedinUrl: "",
+    githubUrl: "",
+    twitterUrl: "",
+    blogUrl: "",
+    whatsappUrl: "",
+    telegramUrl: "",
+    aboutMe: "",
+    careerGoals: "",
+    technicalSkills: [],
+    softSkills: [],
+    toolsAndTech: [],
+    experience: [],
+    education: [],
+    projects: [],
+    certifications: [],
+    awards: [],
+    blogs: [],
+    languages: [],
+    openSource: [],
+    hobbies: "",
+    socialProof: {},
+    template: "modern",
   })
+  const [previewHtml, setPreviewHtml] = useState("")
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const handleSave = () => {
-    toast({
-      title: "Portfolio saved!",
-      description: "Your changes have been saved successfully.",
-    })
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      const token = localStorage.getItem("token")
+      if (!token) return
+      try {
+        const res = await fetch("http://localhost:5001/api/portfolio/finalized", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPortfolioData({
+            ...portfolioData,
+            ...data,
+            template: data.template || "modern",
+          })
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    }
+    fetchPortfolio()
+    // eslint-disable-next-line
+  }, [])
+
+  const handleSave = async () => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Please log in to save your portfolio.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setSaving(true)
+    try {
+      // Save the portfolio data
+      const saveRes = await fetch("http://localhost:5001/api/portfolio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(portfolioData),
+      })
+
+      if (!saveRes.ok) {
+        throw new Error("Failed to save portfolio")
+      }
+
+      // Regenerate the portfolio HTML
+      const generateRes = await fetch("http://localhost:5001/api/portfolio/generate", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!generateRes.ok) {
+        throw new Error("Failed to regenerate portfolio")
+      }
+
+      const html = await generateRes.text()
+      setPreviewHtml(html)
+
+      toast({
+        title: "Portfolio updated!",
+        description: "Your changes have been saved and the portfolio has been regenerated.",
+      })
+    } catch (error) {
+      console.error("Save error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save portfolio changes. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handlePublish = () => {
@@ -73,6 +145,27 @@ export default function EditPortfolioPage() {
       description: "Your portfolio is now live at autoport.site/johndoe/portfolio1",
     })
   }
+
+  const loadPreview = async () => {
+    setLoadingPreview(true)
+    const token = localStorage.getItem("token")
+    try {
+      const res = await fetch("http://localhost:5001/api/portfolio/generate", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const html = await res.text()
+        setPreviewHtml(html)
+      }
+    } catch (err) {
+      console.error("Failed to load preview:", err)
+    }
+    setLoadingPreview(false)
+  }
+
+  useEffect(() => {
+    loadPreview()
+  }, [portfolioData])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,12 +184,22 @@ export default function EditPortfolioPage() {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSave}
+              disabled={saving}
+            >
               <Save className="w-4 h-4 mr-2" />
-              Save
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
-            <Button size="sm" onClick={handlePublish}>
-              Publish
+            <Button 
+              size="sm" 
+              onClick={handleSave}
+              disabled={saving}
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              {saving ? "Updating..." : "Update Portfolio"}
             </Button>
           </div>
         </div>
@@ -115,166 +218,113 @@ export default function EditPortfolioPage() {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="personal" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-8">
                     <TabsTrigger value="personal">Personal</TabsTrigger>
-                    <TabsTrigger value="experience">Experience</TabsTrigger>
+                    <TabsTrigger value="contact">Contact</TabsTrigger>
+                    <TabsTrigger value="about">About</TabsTrigger>
+                    <TabsTrigger value="skills">Skills</TabsTrigger>
                     <TabsTrigger value="projects">Projects</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                    <TabsTrigger value="experience">Experience</TabsTrigger>
+                    <TabsTrigger value="education">Education</TabsTrigger>
+                    <TabsTrigger value="additional">Additional</TabsTrigger>
+                    <TabsTrigger value="template">Template</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="personal" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input
-                          id="name"
-                          value={portfolioData.name}
-                          onChange={(e) => setPortfolioData({ ...portfolioData, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Professional Title</Label>
-                        <Input
-                          id="title"
-                          value={portfolioData.title}
-                          onChange={(e) => setPortfolioData({ ...portfolioData, title: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        rows={4}
-                        value={portfolioData.bio}
-                        onChange={(e) => setPortfolioData({ ...portfolioData, bio: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={portfolioData.email}
-                          onChange={(e) => setPortfolioData({ ...portfolioData, email: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input
-                          id="phone"
-                          value={portfolioData.phone}
-                          onChange={(e) => setPortfolioData({ ...portfolioData, phone: e.target.value })}
-                        />
-                      </div>
-                    </div>
+                    <PersonalInfoForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="experience" className="space-y-4">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold">Work Experience</h3>
-                      {portfolioData.experience.map((exp, index) => (
-                        <Card key={index}>
-                          <CardContent className="pt-4">
-                            <div className="space-y-2">
-                              <Input
-                                placeholder="Job Title"
-                                value={exp.title}
-                                onChange={(e) => {
-                                  const newExp = [...portfolioData.experience]
-                                  newExp[index].title = e.target.value
-                                  setPortfolioData({ ...portfolioData, experience: newExp })
-                                }}
-                              />
-                              <Input
-                                placeholder="Company"
-                                value={exp.company}
-                                onChange={(e) => {
-                                  const newExp = [...portfolioData.experience]
-                                  newExp[index].company = e.target.value
-                                  setPortfolioData({ ...portfolioData, experience: newExp })
-                                }}
-                              />
-                              <Input
-                                placeholder="Duration"
-                                value={exp.duration}
-                                onChange={(e) => {
-                                  const newExp = [...portfolioData.experience]
-                                  newExp[index].duration = e.target.value
-                                  setPortfolioData({ ...portfolioData, experience: newExp })
-                                }}
-                              />
-                              <Textarea
-                                placeholder="Description"
-                                value={exp.description}
-                                onChange={(e) => {
-                                  const newExp = [...portfolioData.experience]
-                                  newExp[index].description = e.target.value
-                                  setPortfolioData({ ...portfolioData, experience: newExp })
-                                }}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                  <TabsContent value="contact" className="space-y-4">
+                    <ContactInfoForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="about" className="space-y-4">
+                    <AboutSectionForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                      isAboutMeLoading={false}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="skills" className="space-y-4">
+                    <SkillsForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
                   </TabsContent>
 
                   <TabsContent value="projects" className="space-y-4">
-                    <div className="space-y-4">
-                      <h3 className="font-semibold">Projects</h3>
-                      {portfolioData.projects.map((project, index) => (
-                        <Card key={index}>
-                          <CardContent className="pt-4">
-                            <div className="space-y-2">
-                              <Input
-                                placeholder="Project Name"
-                                value={project.name}
-                                onChange={(e) => {
-                                  const newProjects = [...portfolioData.projects]
-                                  newProjects[index].name = e.target.value
-                                  setPortfolioData({ ...portfolioData, projects: newProjects })
-                                }}
-                              />
-                              <Textarea
-                                placeholder="Description"
-                                value={project.description}
-                                onChange={(e) => {
-                                  const newProjects = [...portfolioData.projects]
-                                  newProjects[index].description = e.target.value
-                                  setPortfolioData({ ...portfolioData, projects: newProjects })
-                                }}
-                              />
-                              <Input
-                                placeholder="Project URL"
-                                value={project.url}
-                                onChange={(e) => {
-                                  const newProjects = [...portfolioData.projects]
-                                  newProjects[index].url = e.target.value
-                                  setPortfolioData({ ...portfolioData, projects: newProjects })
-                                }}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                    <ProjectsForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="settings" className="space-y-4">
+                  <TabsContent value="experience" className="space-y-4">
+                    <ExperienceForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="education" className="space-y-4">
+                    <EducationForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="additional" className="space-y-4">
+                    <AdditionalSectionsForm
+                      data={portfolioData}
+                      updateData={(section, data) => setPortfolioData({ ...portfolioData, [section]: data })}
+                      extractedFields={new Set()}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="template" className="space-y-4">
                     <div className="space-y-4">
                       <h3 className="font-semibold">Template & Theme</h3>
                       <div className="grid grid-cols-2 gap-4">
-                        {["Modern", "Creative", "Minimal", "Tech"].map((template) => (
+                        {["modern", "creative", "minimal", "tech"].map((template) => (
                           <div
                             key={template}
-                            className="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-600"
+                            className={`border-2 rounded-lg p-3 cursor-pointer hover:border-blue-600 ${portfolioData.template === template ? "border-blue-600" : "border-gray-200"}`}
+                            onClick={() => setPortfolioData({ ...portfolioData, template })}
                           >
                             <div className="aspect-video bg-gray-100 rounded mb-2"></div>
-                            <p className="text-sm font-medium">{template}</p>
+                            <p className="text-sm font-medium capitalize">{template}</p>
                           </div>
                         ))}
+                      </div>
+                      
+                      {/* Save & Update Button */}
+                      <div className="pt-6 border-t">
+                        <Button 
+                          onClick={handleSave}
+                          disabled={saving}
+                          className="w-full"
+                          size="lg"
+                        >
+                          <Zap className="w-5 h-5 mr-2" />
+                          {saving ? "Saving & Updating..." : "Save & Update Portfolio"}
+                        </Button>
+                        <p className="text-sm text-gray-500 mt-2 text-center">
+                          This will save your changes and regenerate your portfolio with the latest data
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
@@ -305,7 +355,17 @@ export default function EditPortfolioPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-[600px]">
-                <PortfolioPreview3D portfolioData={portfolioData} />
+                {loadingPreview ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-gray-500">Loading preview...</div>
+                  </div>
+                ) : (
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-full border-0"
+                    title="Portfolio Preview"
+                  />
+                )}
               </CardContent>
             </Card>
           </div>

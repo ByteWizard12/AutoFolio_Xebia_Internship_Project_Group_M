@@ -9,6 +9,7 @@ import CreatePortfolioPage from "./pages/CreatePortfolioPage"
 import EditPortfolioPage from "./pages/EditPortfolioPage"
 import SettingsPage from "./pages/SettingsPage"
 import PricingPage from "./pages/PricingPage"
+import PortfolioPreviewPage from "./pages/PortfolioPreviewPage";
 import "./App.css"
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/edit/:id" element={<EditPortfolioPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/portfolio/preview" element={<PortfolioPreviewPage />} />
         </Routes>
         <Toaster />
       </div>

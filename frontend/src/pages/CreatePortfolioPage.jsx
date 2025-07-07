@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
@@ -89,6 +89,8 @@ export default function CreatePortfolioPage() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { user, loading } = useAuth()
+  const [isAboutMeLoading, setIsAboutMeLoading] = useState(false);
+
   useEffect(() => {
     const hasPaid = localStorage.getItem("hasPaid")
     if (!loading && user && hasPaid !== "true") {
@@ -96,7 +98,24 @@ export default function CreatePortfolioPage() {
     }
   }, [user, loading, navigate])
 
-  
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      const token = localStorage.getItem("token")
+      if (!token) return
+      try {
+        const res = await fetch("http://localhost:5001/api/portfolio", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPortfolioData((prev) => ({ ...prev, ...data }))
+        }
+      } catch (err) {
+        // ignore if not found
+      }
+    }
+    fetchPortfolio()
+  }, [])
 
   const steps = [
     { id: 1, title: "Data Source", description: "Choose how to provide your information" },
@@ -188,8 +207,6 @@ export default function CreatePortfolioPage() {
     }
     return [];
   };
-
-  const [isAboutMeLoading, setIsAboutMeLoading] = useState(false);
 
   const handleResumeProcessed = (extractedData, huggingFaceError) => {
     // Log the full Affinda response for mapping
@@ -308,46 +325,28 @@ export default function CreatePortfolioPage() {
     }
 
     try {
-      // Create portfolio in backend
-      const token = localStorage.getItem('token')
-      const portfolioPayload = {
-        name: portfolioData.fullName + "'s Portfolio",
-        template: portfolioData.template,
-        resumeId: portfolioData.resumeId // This will be undefined if no resume was uploaded
-      }
-
-      const response = await fetch('http://localhost:8000/api/v1/portfolio/create', {
-        method: 'POST',
+      const token = localStorage.getItem("token")
+      const response = await fetch("http://localhost:5001/api/portfolio", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'token': token
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(portfolioPayload)
+        body: JSON.stringify(portfolioData),
       })
-
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create portfolio')
+        throw new Error(errorData.message || "Failed to save portfolio")
       }
-
-      const result = await response.json()
-
       toast({
-        title: "Portfolio created successfully!",
-        description: "Redirecting to the editor...",
-        duration: 3000,
+        title: "Portfolio saved!",
+        description: "Redirecting to preview...",
+        duration: 2000,
       })
-
-      // Save portfolio data to localStorage for editing
-      localStorage.setItem("portfolioData", JSON.stringify(portfolioData))
-      localStorage.setItem("portfolioId", result.portfolioId)
-      
-      navigate("/edit/new")
-
+      navigate("/portfolio/preview")
     } catch (error) {
-      console.error('Error creating portfolio:', error)
       toast({
-        title: "Failed to create portfolio",
+        title: "Failed to save portfolio",
         description: error.message || "Please try again",
         variant: "destructive",
         duration: 5000,
@@ -599,7 +598,7 @@ export default function CreatePortfolioPage() {
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700">
-                  Create Portfolio
+                  Save Portfolio
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}

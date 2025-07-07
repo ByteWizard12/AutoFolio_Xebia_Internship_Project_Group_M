@@ -3,7 +3,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
+const ejs = require("ejs");
+const archiver = require("archiver");
 require('dotenv').config();
+const Portfolio = require("../models/Portfolio");
+const verifyToken = require("../middleware/verifyToken");
 
 const router = express.Router();
 
@@ -167,6 +171,115 @@ router.post('/generate-about-me', async (req, res) => {
     res.json({ aboutMe, cohereError });
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate About Me', details: err.message });
+  }
+});
+
+// GET /api/portfolio - Get current user's portfolio
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ userId: req.userId });
+    if (!portfolio) return res.status(404).json({ error: "Portfolio not found" });
+    res.json(portfolio);
+  } catch (err) {
+    console.error("Portfolio fetch error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /api/portfolio - Create or update current user's portfolio
+router.post("/", verifyToken, async (req, res) => {
+  try {
+    const data = req.body;
+    let portfolio = await Portfolio.findOne({ userId: req.userId });
+    if (portfolio) {
+      // Update
+      Object.assign(portfolio, data, { updatedAt: new Date() });
+      await portfolio.save();
+    } else {
+      // Create
+      portfolio = new Portfolio({ ...data, userId: req.userId });
+      await portfolio.save();
+    }
+    res.json(portfolio);
+  } catch (err) {
+    console.error("Portfolio save error:", err);
+    res.status(500).json({ error: "Failed to save portfolio" });
+  }
+});
+
+// POST /api/portfolio/finalize - Mark portfolio as finalized
+router.post("/finalize", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOneAndUpdate(
+      { userId: req.userId },
+      { finalized: true, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!portfolio) return res.status(404).json({ error: "Portfolio not found" });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to finalize portfolio" });
+  }
+});
+
+// GET /api/portfolio/generate - Generate portfolio HTML for preview
+router.get("/generate", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ userId: req.userId });
+    if (!portfolio) return res.status(404).json({ error: "Portfolio not found" });
+    const templateName = portfolio.template || "default";
+    const templatePath = path.join(__dirname, `../templates/template-${templateName}.html`);
+    if (!fs.existsSync(templatePath)) return res.status(404).json({ error: "Template not found" });
+    const html = await ejs.renderFile(templatePath, portfolio.toObject());
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (err) {
+    console.error("Portfolio generation error:", err);
+    res.status(500).json({ error: "Failed to generate portfolio" });
+  }
+});
+
+// GET /api/portfolio/download - Download portfolio as ZIP
+router.get("/download", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ userId: req.userId });
+    if (!portfolio) return res.status(404).json({ error: "Portfolio not found" });
+    const templateName = portfolio.template || "default";
+    const templatePath = path.join(__dirname, `../templates/template-${templateName}.html`);
+    if (!fs.existsSync(templatePath)) return res.status(404).json({ error: "Template not found" });
+    const html = await ejs.renderFile(templatePath, portfolio.toObject());
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", "attachment; filename=portfolio.zip");
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.append(html, { name: "index.html" });
+    // Optionally add assets (CSS, images) here if needed
+    archive.finalize();
+    archive.pipe(res);
+  } catch (err) {
+    console.error("Portfolio ZIP error:", err);
+    res.status(500).json({ error: "Failed to generate ZIP" });
+  }
+});
+
+// GET /api/portfolio/finalized - Get finalized portfolio for current user
+router.get("/finalized", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ userId: req.userId, finalized: true });
+    if (!portfolio) return res.status(404).json({ error: "No finalized portfolio found" });
+    res.json(portfolio);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch finalized portfolio" });
+  }
+});
+
+// DELETE /api/portfolio - Delete finalized portfolio for current user
+router.delete("/", verifyToken, async (req, res) => {
+  try {
+    const result = await Portfolio.findOneAndDelete({ userId: req.userId, finalized: true });
+    if (!result) return res.status(404).json({ error: "No finalized portfolio to delete" });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete portfolio" });
   }
 });
 

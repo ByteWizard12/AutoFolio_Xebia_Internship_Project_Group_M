@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= fullName %> - Portfolio</title>
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #3b82f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --background: #ffffff;
+      --surface: #f9fafb;
+      --border: #e5e7eb;
+      --border-light: #f3f4f6;
+      --accent: #f3f4f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 24px;
+    }
+
+    /* Unique Loading Animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--background);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeOut 0.8s ease-in-out 2s forwards;
+    }
+
+    .loading-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+
+    .loading-text::after {
+      content: '|';
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    /* Unique Header with Typewriter Effect */
+    .header {
+      margin-bottom: 120px;
+      padding-bottom: 60px;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      animation: slideInFromLeft 1s ease-out 2.5s forwards;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      background: var(--primary);
+      color: white;
+      font-size: 1.75rem;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .avatar:hover::before {
+      left: 100%;
+    }
+
+    .avatar:hover {
+      background: var(--primary-light);
+      transform: scale(1.05);
+    }
+
+    .main-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.025em;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid var(--primary);
+      animation: typewriter 2s steps(20) 3s forwards, blinkCursor 1s infinite 3s;
+      width: 0;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-weight: 500;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out 5s forwards;
+    }
+
+    .subtitle i {
+      margin-right: 8px;
+      color: var(--primary);
+      animation: pulse 2s infinite 5.5s;
+    }
+
+    .bio {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out 5.5s forwards;
+    }
+
+    @keyframes typewriter {
+      to { width: 100%; }
+    }
+
+    @keyframes blinkCursor {
+      0%, 50% { border-color: var(--primary); }
+      51%, 100% { border-color: transparent; }
+    }
+
+    @keyframes slideInFromLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    /* Unique Section Reveals */
+    .section {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 48px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.8s ease-out 0.3s;
+    }
+
+    .section.visible .section-title::after {
+      width: 60px;
+    }
+
+    .section-title i {
+      color: var(--primary);
+      font-size: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .section.visible .section-title i {
+      animation: bounceIn 0.6s ease-out 0.5s;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Unique Skills Animation */
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skills .badge {
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      transform: translateY(20px) scale(0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skills .badge::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      transition: left 0.3s ease;
+      z-index: -1;
+    }
+
+    .skills .badge:hover::before {
+      left: 0;
+    }
+
+    .skills .badge:hover {
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .section.visible .skills .badge {
+      animation: skillPop 0.5s ease-out forwards;
+    }
+
+    .section.visible .skills .badge:nth-child(1) { animation-delay: 0.1s; }
+    .section.visible .skills .badge:nth-child(2) { animation-delay: 0.2s; }
+    .section.visible .skills .badge:nth-child(3) { animation-delay: 0.3s; }
+    .section.visible .skills .badge:nth-child(4) { animation-delay: 0.4s; }
+    .section.visible .skills .badge:nth-child(5) { animation-delay: 0.5s; }
+    .section.visible .skills .badge:nth-child(6) { animation-delay: 0.6s; }
+    .section.visible .skills .badge:nth-child(7) { animation-delay: 0.7s; }
+    .section.visible .skills .badge:nth-child(8) { animation-delay: 0.8s; }
+
+    @keyframes skillPop {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Unique Card Animations */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .card {
+      background: transparent;
+      border: none;
+      padding: 32px 0;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .card:hover::before {
+      width: 12px;
+    }
+
+    .card:hover {
+      padding-left: 24px;
+      background: rgba(37, 99, 235, 0.02);
+      border-radius: 8px;
+      border-bottom-color: var(--primary);
+    }
+
+    .card:last-child {
+      border-bottom: none;
+    }
+
+    .section.visible .card {
+      animation: slideInFromLeft 0.6s ease-out forwards;
+    }
+
+    .section.visible .card:nth-child(1) { animation-delay: 0.1s; }
+    .section.visible .card:nth-child(2) { animation-delay: 0.2s; }
+    .section.visible .card:nth-child(3) { animation-delay: 0.3s; }
+    .section.visible .card:nth-child(4) { animation-delay: 0.4s; }
+
+    .card strong {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .card strong::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .card:hover strong::after {
+      width: 100%;
+    }
+
+    .card-company {
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .card small {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Unique Contact Animation */
+    .contact {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 48px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.05), transparent);
+      transition: left 1s ease;
+    }
+
+    .section.visible .contact::before {
+      left: 100%;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .contact-item:last-child {
+      border-bottom: none;
+    }
+
+    .section.visible .contact-item {
+      animation: slideInFromRight 0.6s ease-out forwards;
+    }
+
+    .section.visible .contact-item:nth-child(1) { animation-delay: 0.2s; }
+    .section.visible .contact-item:nth-child(2) { animation-delay: 0.4s; }
+    .section.visible .contact-item:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes slideInFromRight {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .contact-item:hover {
+      padding-left: 8px;
+      background: rgba(37, 99, 235, 0.02);
+      border-radius: 6px;
+    }
+
+    .contact-item i {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 1.125rem;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact-item i::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      transform: scale(0);
+      transition: transform 0.3s ease;
+      border-radius: 8px;
+    }
+
+    .contact-item:hover i::before {
+      transform: scale(1);
+    }
+
+    .contact-item:hover i {
+      color: white;
+    }
+
+    .contact-label {
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 2px;
+    }
+
+    .contact a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      position: relative;
+    }
+
+    .contact a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .contact a:hover::after {
+      width: 100%;
+    }
+
+    .contact a:hover {
+      color: var(--primary);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 60px 0 0;
+      margin-top: 120px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease-out 1s forwards;
+    }
+
+    /* Section spacing */
+    .mb-5 {
+      margin-bottom: 96px !important;
+    }
+
+    /* About Section */
+    .section-content {
+      background: transparent;
+      padding: 0;
+    }
+
+    .section-content p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out 0.3s;
+    }
+
+    .section.visible .section-content p {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 80px 20px;
+      }
+
+      .header {
+        margin-bottom: 80px;
+        padding-bottom: 40px;
+      }
+
+      .main-title {
+        font-size: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.25rem;
+        margin-bottom: 32px;
+      }
+
+      .mb-5 {
+        margin-bottom: 64px !important;
+      }
+
+      .contact {
+        padding: 32px 24px;
+      }
+
+      .card {
+        padding: 24px 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 60px 16px;
+      }
+
+      .main-title {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      .avatar {
+        width: 64px;
+        height: 64px;
+        font-size: 1.5rem;
+      }
+
+      .header {
+        text-align: center;
+      }
+
+      .skills {
+        justify-content: center;
+      }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      
+      .main-title {
+        width: 100%;
+        border-right: none;
+      }
+      
+      .loading-overlay {
+        display: none;
+      }
+      
+      .header {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Loading Animation -->
+  <div class="loading-overlay">
+    <div class="loading-text">Initializing portfolio...</div>
+  </div>
+
+  <div class="container">
+    <!-- Header with Typewriter Effect -->
+    <div class="header">
+      <div class="avatar"><%= fullName ? fullName.charAt(0) : 'U' %></div>
+      <div class="main-title"><%= fullName %></div>
+      <div class="subtitle">
+        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i>
+        <%= currentRole %>
+      </div>
+      <div class="bio"><%= shortBio %></div>
+    </div>
+
+    <!-- About -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-person"></i>
+        About
+      </div>
+      <div class="section-content">
+        <p><%= aboutMe %></p>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-tools"></i>
+        Skills
+      </div>
+      <div class="skills">
+        <% technicalSkills.forEach(skill => { %>
+          <span class="badge"><%= skill %></span>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Experience -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-briefcase"></i>
+        Experience
+      </div>
+      <div class="card-list">
+        <% experience.forEach(exp => { %>
+          <div class="card">
+            <strong><%= exp.jobTitle %></strong>
+            <div class="card-company"><%= exp.companyName %></div>
+            <small><i class="bi bi-calendar3"></i> <%= exp.duration %></small>
+            <p><%= exp.responsibilities %></p>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-code-square"></i>
+        Projects
+      </div>
+      <div class="card-list">
+        <% projects.forEach(proj => { %>
+          <div class="card">
+            <strong><%= proj.name %></strong>
+            <p class="mb-2"><%= proj.description %></p>
+            <small><i class="bi bi-stack"></i> <%= proj.techStack.join(', ') %></small>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-mortarboard"></i>
+        Education
+      </div>
+      <div class="card-list">
+        <% education.forEach(edu => { %>
+          <div class="card">
+            <strong><%= edu.degree %></strong>
+            <div class="card-company"><%= edu.institution %></div>
+            <small><i class="bi bi-calendar3"></i> <%= edu.duration %></small>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="mb-5 section">
+      <div class="section-title">
+        <i class="bi bi-envelope"></i>
+        Contact
+      </div>
+      <div class="contact">
+        <div class="contact-item">
+          <i class="bi bi-envelope"></i>
+          <div>
+            <div class="contact-label">Email</div>
+            <a href="mailto:<%= email %>"><%= email %></a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="bi bi-linkedin"></i>
+          <div>
+            <div class="contact-label">LinkedIn</div>
+            <a href="<%= linkedinUrl %>" target="_blank"><%= linkedinUrl %></a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="bi bi-github"></i>
+          <div>
+            <div class="contact-label">GitHub</div>
+            <a href="<%= githubUrl %>" target="_blank"><%= githubUrl %></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; <%= new Date().getFullYear() %> <%= fullName %></p>
+    </footer>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Unique Scroll Animation Script -->
+  <script>
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.section').forEach(section => {
+      observer.observe(section);
+    });
+
+    // Add some personality to the loading text
+    const loadingTexts = [
+      'Initializing portfolio...',
+      'Loading creativity...',
+      'Compiling experiences...',
+      'Rendering skills...',
+      'Ready to impress!'
+    ];
+
+    let textIndex = 0;
+    const loadingElement = document.querySelector('.loading-text');
+    
+    const changeLoadingText = () => {
+      if (textIndex < loadingTexts.length - 1) {
+        setTimeout(() => {
+          loadingElement.textContent = loadingTexts[++textIndex];
+          if (textIndex < loadingTexts.length - 1) {
+            changeLoadingText();
+          }
+        }, 400);
+      }
+    };
+
+    changeLoadingText();
+  </script>
+</body>
+</html>

@@ -13,25 +13,8 @@ import { InteractiveCard3D } from "../components/3d/interactive-card"
 export default function DashboardPage() {
   const { user, logout, loading } = useAuth()
   const navigate = useNavigate()
-  const [portfolios, setPortfolios] = useState([
-    {
-      id: "1",
-      name: "My Professional Portfolio",
-      template: "Modern",
-      status: "published",
-      url: "autoport.site/johndoe/portfolio1",
-      createdAt: "2024-01-15",
-      views: 234,
-    },
-    {
-      id: "2",
-      name: "Creative Portfolio",
-      template: "Creative",
-      status: "draft",
-      createdAt: "2024-01-20",
-      views: 0,
-    },
-  ])
+  const [portfolio, setPortfolio] = useState(null)
+  const [loadingPortfolio, setLoadingPortfolio] = useState(true)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,12 +23,43 @@ export default function DashboardPage() {
   }, [user, loading, navigate])
 
   useEffect(() => {
-  const hasPaid = localStorage.getItem("hasPaid")
-  if (!loading && user && hasPaid !== "true") {
-    navigate("/pricing")
-  }
-}, [user, loading, navigate])
+    const hasPaid = localStorage.getItem("hasPaid")
+    if (!loading && user && hasPaid !== "true") {
+      navigate("/pricing")
+    }
+  }, [user, loading, navigate])
 
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      setLoadingPortfolio(true)
+      const token = localStorage.getItem("token")
+      try {
+        const res = await fetch("http://localhost:5001/api/portfolio/finalized", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          setPortfolio(await res.json())
+        } else {
+          setPortfolio(null)
+        }
+      } catch {
+        setPortfolio(null)
+      } finally {
+        setLoadingPortfolio(false)
+      }
+    }
+    fetchPortfolio()
+  }, [])
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete your portfolio?")) return
+    const token = localStorage.getItem("token")
+    const res = await fetch("http://localhost:5001/api/portfolio", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (res.ok) setPortfolio(null)
+  }
 
   if (loading) {
     return (
@@ -92,20 +106,20 @@ export default function DashboardPage() {
           stats={[
             {
               title: "Total Portfolios",
-              value: portfolios.length.toString(),
-              description: `${portfolios.filter((p) => p.status === "published").length} published`,
+              value: "1", // This will need to be updated based on the new portfolio logic
+              description: "1 finalized portfolio",
               color: "#3b82f6",
             },
             {
               title: "Total Views",
-              value: portfolios.reduce((sum, p) => sum + p.views, 0).toString(),
+              value: "0", // This will need to be updated based on the new portfolio logic
               description: "Across all portfolios",
               color: "#8b5cf6",
             },
             {
               title: "This Month",
-              value: "156",
-              description: "+12% from last month",
+              value: "0", // This will need to be updated based on the new portfolio logic
+              description: "+0% from last month",
               color: "#10b981",
             },
           ]}
@@ -113,7 +127,7 @@ export default function DashboardPage() {
 
         {/* Main Content */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">My Portfolios</h1>
+          <h1 className="text-3xl font-bold">My Portfolio</h1>
           <Link to="/create">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -121,65 +135,57 @@ export default function DashboardPage() {
             </Button>
           </Link>
         </div>
-
-        {/* Portfolios Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {portfolios.map((portfolio) => (
-            <InteractiveCard3D key={portfolio.id}>
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{portfolio.name}</CardTitle>
-                    <Badge variant={portfolio.status === "published" ? "default" : "secondary"}>
-                      {portfolio.status}
-                    </Badge>
-                  </div>
-                  <CardDescription>
-                    Template: {portfolio.template} • Created {new Date(portfolio.createdAt).toLocaleDateString()}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <span>{portfolio.views} views</span>
-                    {portfolio.url && <span className="text-blue-600 truncate">{portfolio.url}</span>}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Link to={`/edit/${portfolio.id}`}>
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                    </Link>
-                    {portfolio.status === "published" && (
-                      <>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-1" />
-                          Download
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Share2 className="w-4 h-4 mr-1" />
-                          Share
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </InteractiveCard3D>
-          ))}
-        </div>
-
-        {portfolios.length === 0 && (
+        {/* Portfolio Card */}
+        {loadingPortfolio ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : portfolio ? (
+          <InteractiveCard3D>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{portfolio.fullName || "Portfolio"}</CardTitle>
+                  <Badge variant="default">finalized</Badge>
+                </div>
+                <CardDescription>
+                  Template: {portfolio.template} • Last updated {new Date(portfolio.updatedAt).toLocaleDateString()}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                  <span>Finalized</span>
+                </div>
+                <div className="flex space-x-2">
+                  <Link to="/portfolio/preview">
+                    <Button variant="outline" size="sm">
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                  </Link>
+                  <Link to="/edit/new">
+                    <Button variant="outline" size="sm">
+                      <Eye className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="sm" onClick={handleDelete}>
+                    <Download className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </InteractiveCard3D>
+        ) : (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Plus className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No portfolios yet</h3>
-            <p className="text-gray-600 mb-4">Create your first portfolio to get started</p>
+            <h3 className="text-xl font-semibold mb-2">No portfolio yet</h3>
+            <p className="text-gray-600 mb-4">Create your portfolio to get started</p>
             <Link to="/create">
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Your First Portfolio
+                Create Your Portfolio
               </Button>
             </Link>
           </div>
