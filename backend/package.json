@@ -4,7 +4,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'Backend is ready for deployment'",
+    "deploy": "npm start"
   },
   "dependencies": {
     "archiver": "^6.0.2",

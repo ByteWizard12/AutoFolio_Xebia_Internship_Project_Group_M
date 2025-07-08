@@ -283,4 +283,52 @@ router.delete("/", verifyToken, async (req, res) => {
   }
 });
 
+// DELETE /api/portfolio/:id - Delete a portfolio by its ID (for the logged-in user)
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const result = await Portfolio.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    if (!result) return res.status(404).json({ error: "Portfolio not found" });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete portfolio" });
+  }
+});
+
+// GET /api/portfolio/public/:portfolioId - Publicly viewable portfolio by ID
+router.get("/public/:portfolioId", async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ _id: req.params.portfolioId, finalized: true });
+    if (!portfolio) return res.status(404).send("Portfolio not found");
+    const templateName = portfolio.template || "default";
+    const templatePath = path.join(__dirname, `../templates/template-${templateName}.html`);
+    if (!fs.existsSync(templatePath)) return res.status(404).send("Template not found");
+    const html = await ejs.renderFile(templatePath, portfolio.toObject());
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch (err) {
+    res.status(500).send("Failed to render portfolio");
+  }
+});
+
+// GET /api/portfolio/all - Get all portfolios for the logged-in user
+router.get("/all", verifyToken, async (req, res) => {
+  try {
+    const portfolios = await Portfolio.find({ userId: req.userId });
+    res.json(portfolios);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch portfolios" });
+  }
+});
+
+// GET /api/portfolio/:id - Get a specific portfolio by its ID (for the logged-in user)
+router.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne({ _id: req.params.id, userId: req.userId });
+    if (!portfolio) return res.status(404).json({ error: "Portfolio not found" });
+    res.json(portfolio);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch portfolio" });
+  }
+});
+
 module.exports = router; 

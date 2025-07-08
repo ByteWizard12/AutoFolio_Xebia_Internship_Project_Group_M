@@ -24,7 +24,6 @@ router.post('/register', async (req, res) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.log("Validation error:", parsed.error.errors);
       return res.status(400).json({ error: 'Invalid input', details: parsed.error.errors });
     }
 
@@ -32,7 +31,6 @@ router.post('/register', async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("User already exists:", email);
       return res.status(409).json({ error: 'Email already registered' });
     }
 
@@ -47,8 +45,6 @@ router.post('/register', async (req, res) => {
     });
 
     await newUser.save();
-    console.log("User created:", email);
-
     if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET not set");
 
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
@@ -76,7 +72,6 @@ router.post('/login', async (req, res) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      console.log("Validation error:", parsed.error.errors);
       return res.status(400).json({ error: 'Invalid input', details: parsed.error.errors });
     }
 
@@ -84,13 +79,11 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found:", email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      console.log("Incorrect password for:", email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -102,8 +95,6 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
-
-    console.log(`Login successful for ${email} | Subscription: ${subscriptionStatus}`);
 
     return res.status(isActive ? 200 : 403).json({
       token,

@@ -17,7 +17,7 @@ router.get("/plans", async (req, res) => {
     const plans = await razorpay.plans.all();
     res.json(plans.items);
   } catch (err) {
-    console.error("❌ Error fetching plans:", err);
+    console.error(" Error fetching plans:", err);
     res.status(500).json({ error: "Failed to fetch plans" });
   }
 });
@@ -44,7 +44,7 @@ router.post("/create-subscription", async (req, res) => {
 
     res.status(201).json(sub);
   } catch (err) {
-    console.error("❌ Error creating subscription:", err);
+    console.error(" Error creating subscription:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -63,7 +63,7 @@ router.post("/webhook", async (req, res) => {
       .digest("hex");
 
     if (signature !== expectedSignature) {
-      console.warn("❌ Invalid Razorpay signature");
+      console.warn(" Invalid Razorpay signature");
       return res.status(400).json({ message: "Invalid signature" });
     }
 
@@ -81,9 +81,8 @@ router.post("/webhook", async (req, res) => {
             "subscription.endedAt": sub.ended_at ? new Date(sub.ended_at * 1000) : null,
           }
         );
-        console.log("✅ Subscription updated from webhook:", sub.id);
-      } catch (err) {
-        console.error("❌ Webhook DB update failed:", err);
+        } catch (err) {
+        console.error(" Webhook DB update failed:", err);
       }
     }
 

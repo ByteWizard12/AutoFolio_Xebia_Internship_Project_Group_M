@@ -7,7 +7,7 @@ const router = express.Router();
 
 // 🔑 Ensure Razorpay keys are set
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  throw new Error("❌ Razorpay credentials not set in .env");
+  throw new Error(" Razorpay credentials not set in .env");
 }
 
 // 🔑 Razorpay Setup
@@ -72,8 +72,6 @@ router.post("/activate-subscription", async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
-
-    console.log("Subscription activated for:", updatedUser.email);
 
     return res.status(200).json({
       message: "Subscription activated",

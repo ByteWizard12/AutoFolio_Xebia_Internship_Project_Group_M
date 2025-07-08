@@ -19,7 +19,12 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 // ✅ 1. Razorpay Webhook (handle raw body first)
 app.post("/api/subscription/webhook", async (req, res) => {
@@ -39,7 +44,7 @@ app.post("/api/subscription/webhook", async (req, res) => {
     }
 
     const event = JSON.parse(rawBody.toString());
-    console.log("Razorpay Event:", event.event);
+
 
     if (event.event === "subscription.charged") {
       const sub = event.payload.subscription.entity;
@@ -54,7 +59,7 @@ app.post("/api/subscription/webhook", async (req, res) => {
         }
       );
 
-      console.log("Subscription updated for user with Razorpay sub ID:", sub.id);
+
     }
 
     res.status(200).json({ received: true });
