@@ -2,6 +2,13 @@
 
 A modern, AI-powered portfolio generator that creates stunning portfolios from resumes using advanced text extraction and AI analysis.
 
+
+
+## 🔗 Live Demo
+
+👉 [View Live Project](https://auto-folio-xebia-internship-project-group-m-6ngn-mu29vq5rm.vercel.app/)
+
+
 ## 🚀 Features
 
 - **AI Resume Parsing**: Advanced text extraction from PDF, DOC, DOCX files
@@ -155,4 +162,6 @@ For support, please check:
 1. Environment variables are correctly set
 2. All API keys are valid
 3. Database connection is working
+
+
 
