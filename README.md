@@ -84,23 +84,6 @@ CORS_ORIGIN=https://your-frontend-domain.com
 VITE_API_BASE_URL=https://your-backend-domain.com
 ```
 
-## 🚀 Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
-
-### Quick Deploy
-
-```bash
-# Backend
-cd backend
-npm install
-npm start
-
-# Frontend
-cd frontend
-npm install
-npm run build
-```
 
 ## 📁 Project Structure
 
@@ -169,17 +152,7 @@ This project is licensed under the MIT License.
 ## 🆘 Support
 
 For support, please check:
-1. [Deployment Guide](./DEPLOYMENT.md)
-2. Environment variables are correctly set
-3. All API keys are valid
-4. Database connection is working
+1. Environment variables are correctly set
+2. All API keys are valid
+3. Database connection is working
 
-## 🔄 Recent Updates
-
-- ✅ Removed all console.log statements for production
-- ✅ Centralized API configuration
-- ✅ Added environment variable examples
-- ✅ Disabled source maps for security
-- ✅ Updated CORS configuration
-- ✅ Added deployment scripts
-- ✅ Created comprehensive documentation 
