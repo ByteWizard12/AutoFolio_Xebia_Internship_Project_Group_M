@@ -5,6 +5,7 @@ import { Button } from "../ui/button"
 import { Label } from "../ui/label"
 import { Card, CardContent } from "../ui/card"
 import { Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
+import { API_ENDPOINTS } from "../../config/api"
 
 export function ResumeUploadSection({ onResumeProcessed }) {
   const fileInputRef = useRef(null)
@@ -30,7 +31,7 @@ export function ResumeUploadSection({ onResumeProcessed }) {
     try {
       const formData = new FormData()
       formData.append("resume", file)
-      const res = await fetch("http://localhost:5001/api/portfolio/upload-resume", {
+      const res = await fetch(API_ENDPOINTS.PORTFOLIO_UPLOAD_RESUME, {
         method: "POST",
         body: formData,
       })
@@ -43,7 +44,7 @@ export function ResumeUploadSection({ onResumeProcessed }) {
       const data = await res.json()
       setUploadedFilePath(data.filePath)
       if (data.extractedDetails && onResumeProcessed) {
-        console.log("Calling onResumeProcessed with", data.extractedDetails);
+
         onResumeProcessed(data.extractedDetails, data.huggingFaceError)
       }
     } catch (err) {
@@ -98,7 +99,7 @@ export function ResumeUploadSection({ onResumeProcessed }) {
                   <CheckCircle className="w-5 h-5 text-green-600 mb-1" />
                   <span className="text-green-800 font-medium">Resume uploaded successfully!</span>
                   <a
-                    href={`http://localhost:5001${uploadedFilePath}`}
+                    href={`${API_ENDPOINTS.PORTFOLIO.replace('/api/portfolio', '')}${uploadedFilePath}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline mt-1"

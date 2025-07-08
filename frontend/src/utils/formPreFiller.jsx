@@ -163,7 +163,7 @@ function extractEndDate(duration) {
 
 // Main function to pre-fill all form data
 export function preFillAllData(extractedData, setFormData) {
-  console.log("Pre-filling form data with extracted resume information:", extractedData)
+  
 
   const personalInfo = preFillPersonalInfo(extractedData)
   const contactInfo = preFillContactInfo(extractedData)
@@ -205,5 +205,5 @@ export function preFillAllData(extractedData, setFormData) {
     },
   }))
 
-  console.log("Form data pre-filled successfully")
+  
 }

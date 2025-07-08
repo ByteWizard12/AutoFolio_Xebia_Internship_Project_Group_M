@@ -6,15 +6,17 @@ import { useAuth } from "../components/auth-provider"
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
-import { Plus, Eye, Download, Share2, Settings, LogOut, Zap } from "lucide-react"
+import { Plus, Eye, Download, Share2, Settings, LogOut, Zap, Copy } from "lucide-react"
 import { DashboardStats3D } from "../components/3d/dashboard-stats-3d"
 import { InteractiveCard3D } from "../components/3d/interactive-card"
+import { API_ENDPOINTS } from "../config/api"
 
 export default function DashboardPage() {
   const { user, logout, loading } = useAuth()
   const navigate = useNavigate()
-  const [portfolio, setPortfolio] = useState(null)
-  const [loadingPortfolio, setLoadingPortfolio] = useState(true)
+  const [portfolios, setPortfolios] = useState([])
+  const [loadingPortfolios, setLoadingPortfolios] = useState(true)
+  const [copiedId, setCopiedId] = useState(null)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -30,35 +32,43 @@ export default function DashboardPage() {
   }, [user, loading, navigate])
 
   useEffect(() => {
-    const fetchPortfolio = async () => {
-      setLoadingPortfolio(true)
+    const fetchPortfolios = async () => {
+      setLoadingPortfolios(true)
       const token = localStorage.getItem("token")
       try {
-        const res = await fetch("http://localhost:5001/api/portfolio/finalized", {
+        const res = await fetch(API_ENDPOINTS.PORTFOLIO.replace("/api/portfolio", "/api/portfolio/all"), {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (res.ok) {
-          setPortfolio(await res.json())
+          setPortfolios(await res.json())
         } else {
-          setPortfolio(null)
+          setPortfolios([])
         }
       } catch {
-        setPortfolio(null)
+        setPortfolios([])
       } finally {
-        setLoadingPortfolio(false)
+        setLoadingPortfolios(false)
       }
     }
-    fetchPortfolio()
+    fetchPortfolios()
   }, [])
 
-  const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete your portfolio?")) return
-    const token = localStorage.getItem("token")
-    const res = await fetch("http://localhost:5001/api/portfolio", {
+  const handleDelete = async (portfolioId) => {
+    if (!window.confirm("Are you sure you want to delete this portfolio?")) return;
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_ENDPOINTS.PORTFOLIO}/${portfolioId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    })
-    if (res.ok) setPortfolio(null)
+    });
+    if (res.ok) {
+      setPortfolios((prev) => prev.filter((p) => p._id !== portfolioId));
+    }
+  };
+
+  const handleCopy = (url, id) => {
+    navigator.clipboard.writeText(url)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
   }
 
   if (loading) {
@@ -72,6 +82,8 @@ export default function DashboardPage() {
   if (!user) {
     return null
   }
+
+ const publicBase = import.meta.env.VITE_BACKEND_URL + "/api/portfolio/public/" 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,19 +118,19 @@ export default function DashboardPage() {
           stats={[
             {
               title: "Total Portfolios",
-              value: "1", // This will need to be updated based on the new portfolio logic
-              description: "1 finalized portfolio",
+              value: portfolios.length.toString(),
+              description: portfolios.length === 1 ? "1 finalized portfolio" : portfolios.length === 0 ? "No portfolios yet" : `${portfolios.length} portfolios`,
               color: "#3b82f6",
             },
             {
               title: "Total Views",
-              value: "0", // This will need to be updated based on the new portfolio logic
+              value: "0",
               description: "Across all portfolios",
               color: "#8b5cf6",
             },
             {
               title: "This Month",
-              value: "0", // This will need to be updated based on the new portfolio logic
+              value: "0",
               description: "+0% from last month",
               color: "#10b981",
             },
@@ -127,7 +139,7 @@ export default function DashboardPage() {
 
         {/* Main Content */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">My Portfolio</h1>
+          <h1 className="text-3xl font-bold">My Portfolios</h1>
           <Link to="/create">
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -135,46 +147,68 @@ export default function DashboardPage() {
             </Button>
           </Link>
         </div>
-        {/* Portfolio Card */}
-        {loadingPortfolio ? (
+        {/* Portfolio Cards */}
+        {loadingPortfolios ? (
           <div className="text-center py-12">Loading...</div>
-        ) : portfolio ? (
-          <InteractiveCard3D>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{portfolio.fullName || "Portfolio"}</CardTitle>
-                  <Badge variant="default">finalized</Badge>
-                </div>
-                <CardDescription>
-                  Template: {portfolio.template} • Last updated {new Date(portfolio.updatedAt).toLocaleDateString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                  <span>Finalized</span>
-                </div>
-                <div className="flex space-x-2">
-                  <Link to="/portfolio/preview">
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
-                  </Link>
-                  <Link to="/edit/new">
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      Edit
-                    </Button>
-                  </Link>
-                  <Button variant="outline" size="sm" onClick={handleDelete}>
-                    <Download className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </InteractiveCard3D>
+        ) : portfolios.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-8">
+            {portfolios.map((portfolio) => (
+              <InteractiveCard3D key={portfolio._id}>
+                <Card className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{portfolio.fullName || "Portfolio"}</CardTitle>
+                      <Badge variant="default">{portfolio.finalized ? "finalized" : "draft"}</Badge>
+                    </div>
+                    <CardDescription>
+                      Template: {portfolio.template} • Last updated {new Date(portfolio.updatedAt).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                      <span>{portfolio.finalized ? "Finalized" : "Draft"}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={publicBase + portfolio._id}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" size="sm">
+                          <Share2 className="w-4 h-4 mr-1" />
+                          Live URL
+                        </Button>
+                      </a>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopy(publicBase + portfolio._id, portfolio._id)}
+                      >
+                        <Copy className="w-4 h-4 mr-1" />
+                        {copiedId === portfolio._id ? "Copied!" : "Copy URL"}
+                      </Button>
+                      <Link to="/portfolio/preview">
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                      </Link>
+                      <Link to={`/edit/${portfolio._id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(portfolio._id)}>
+                        <Download className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </InteractiveCard3D>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

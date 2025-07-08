@@ -20,6 +20,7 @@ import { ExperienceForm } from "../components/portfolio/ExperienceForm"
 import { EducationForm } from "../components/portfolio/EducationForm"
 import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectionsForm"
 import { useAuth } from "../components/auth-provider"
+import { API_ENDPOINTS } from "../config/api"
 
 
 export default function CreatePortfolioPage() {
@@ -103,7 +104,7 @@ export default function CreatePortfolioPage() {
       const token = localStorage.getItem("token")
       if (!token) return
       try {
-        const res = await fetch("http://localhost:5001/api/portfolio", {
+        const res = await fetch(API_ENDPOINTS.PORTFOLIO, {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (res.ok) {
@@ -210,7 +211,7 @@ export default function CreatePortfolioPage() {
 
   const handleResumeProcessed = (extractedData, huggingFaceError) => {
     // Log the full Affinda response for mapping
-    console.log('Affinda extractedDetails:', extractedData);
+    
     // Map as many fields as possible from extractedData (except About Me)
     setPortfolioData((prev) => ({
       ...prev,
@@ -260,7 +261,7 @@ export default function CreatePortfolioPage() {
     }))
     setIsAboutMeLoading(true);
     // Trigger About Me generation as a separate async step
-            fetch('http://localhost:5001/api/portfolio/generate-about-me', {
+            fetch(API_ENDPOINTS.PORTFOLIO_GENERATE_ABOUT_ME, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extractedData }),
@@ -326,7 +327,7 @@ export default function CreatePortfolioPage() {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch("http://localhost:5001/api/portfolio", {
+      const response = await fetch(API_ENDPOINTS.PORTFOLIO, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -340,10 +341,10 @@ export default function CreatePortfolioPage() {
       }
       toast({
         title: "Portfolio saved!",
-        description: "Redirecting to preview...",
+        description: "Redirecting to dashboard...",
         duration: 2000,
       })
-      navigate("/portfolio/preview")
+      navigate("/dashboard")
     } catch (error) {
       toast({
         title: "Failed to save portfolio",

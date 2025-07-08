@@ -21,6 +21,7 @@ import { ProjectsForm } from "../components/portfolio/ProjectsForm"
 import { ExperienceForm } from "../components/portfolio/ExperienceForm"
 import { EducationForm } from "../components/portfolio/EducationForm"
 import { AdditionalSectionsForm } from "../components/portfolio/AdditionalSectionsForm"
+import { API_ENDPOINTS } from "../config/api"
 
 export default function EditPortfolioPage() {
   const { id } = useParams()
@@ -65,7 +66,7 @@ export default function EditPortfolioPage() {
       const token = localStorage.getItem("token")
       if (!token) return
       try {
-        const res = await fetch("http://localhost:5001/api/portfolio/finalized", {
+        const res = await fetch(API_ENDPOINTS.PORTFOLIO_FINALIZED, {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (res.ok) {
@@ -98,7 +99,7 @@ export default function EditPortfolioPage() {
     setSaving(true)
     try {
       // Save the portfolio data
-      const saveRes = await fetch("http://localhost:5001/api/portfolio", {
+      const saveRes = await fetch(API_ENDPOINTS.PORTFOLIO, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +113,7 @@ export default function EditPortfolioPage() {
       }
 
       // Regenerate the portfolio HTML
-      const generateRes = await fetch("http://localhost:5001/api/portfolio/generate", {
+      const generateRes = await fetch(API_ENDPOINTS.PORTFOLIO_GENERATE, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -150,7 +151,7 @@ export default function EditPortfolioPage() {
     setLoadingPreview(true)
     const token = localStorage.getItem("token")
     try {
-      const res = await fetch("http://localhost:5001/api/portfolio/generate", {
+      const res = await fetch(API_ENDPOINTS.PORTFOLIO_GENERATE, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {

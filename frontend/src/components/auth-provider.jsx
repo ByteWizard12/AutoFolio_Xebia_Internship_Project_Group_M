@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { API_ENDPOINTS } from "../config/api";
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const userRes = await fetch("http://localhost:5001/api/auth/me", {
+        const userRes = await fetch(API_ENDPOINTS.ME, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
         const userData = await userRes.json();
         setUser(userData);
 
-        const subRes = await fetch("http://localhost:5001/api/user/me/subscription", {
+        const subRes = await fetch(API_ENDPOINTS.USER_SUBSCRIPTION, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -54,7 +55,7 @@ export function AuthProvider({ children }) {
   // 📝 Register
   const register = async (name, email, password) => {
     try {
-      const res = await fetch("http://localhost:5001/api/auth/register", {
+      const res = await fetch(API_ENDPOINTS.REGISTER, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -83,7 +84,7 @@ export function AuthProvider({ children }) {
   // 🔐 Login
   const login = async (email, password) => {
     try {
-      const res = await fetch("http://localhost:5001/api/auth/login", {
+      const res = await fetch(API_ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -110,7 +111,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
 
       // Fetch subscription
-      const subRes = await fetch("http://localhost:5001/api/user/me/subscription", {
+      const subRes = await fetch(API_ENDPOINTS.USER_SUBSCRIPTION, {
         headers: { Authorization: `Bearer ${data.token}` },
       });
 

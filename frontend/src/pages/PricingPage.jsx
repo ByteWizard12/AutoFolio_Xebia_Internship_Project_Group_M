@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 export default function PricingPage() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export default function PricingPage() {
   const handleBuy = async () => {
     try {
       // Step 1: Call backend to create Razorpay order
-      const res = await axios.post("http://localhost:5001/api/payment/create-order", {
+      const res = await axios.post(API_ENDPOINTS.PAYMENT_CREATE_ORDER, {
         amount: 199, // ₹199
       });
 
@@ -28,7 +29,7 @@ export default function PricingPage() {
             const token = localStorage.getItem("token");
 
             const activateRes = await fetch(
-              "http://localhost:5001/api/payment/activate-subscription",
+              API_ENDPOINTS.PAYMENT_ACTIVATE_SUBSCRIPTION,
               {
                 method: "POST",
                 headers: {

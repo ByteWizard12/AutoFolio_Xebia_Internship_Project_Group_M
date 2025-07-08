@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { useToast } from "../hooks/use-toast";
+import { API_ENDPOINTS } from "../config/api"
 
 export default function PortfolioPreviewPage() {
   const [previewHtml, setPreviewHtml] = useState("");
@@ -14,7 +15,7 @@ export default function PortfolioPreviewPage() {
     const fetchPreview = async () => {
       const token = localStorage.getItem("token");
       try {
-        const res = await fetch("http://localhost:5001/api/portfolio/generate", {
+        const res = await fetch(API_ENDPOINTS.PORTFOLIO_GENERATE, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -33,7 +34,7 @@ export default function PortfolioPreviewPage() {
   const handleDownload = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5001/api/portfolio/download", {
+      const res = await fetch(API_ENDPOINTS.PORTFOLIO_DOWNLOAD, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -57,7 +58,7 @@ export default function PortfolioPreviewPage() {
   const handleFinalize = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5001/api/portfolio/finalize", {
+      const res = await fetch(API_ENDPOINTS.PORTFOLIO_FINALIZE, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -512,7 +512,7 @@ export function ResumeParser({ onDataExtracted, onError }) {
         "awards",
       ]),
 
-      // Store original extracted text for debugging
+      // Store original extracted text
       _originalText: extractedText,
     }
   }
@@ -714,12 +714,7 @@ export function ResumeParser({ onDataExtracted, onError }) {
                 </div>
               </div>
 
-              {/* Debug section - show extracted text length */}
-              <div className="border-t pt-4">
-                <p className="text-xs text-gray-500">
-                  Extracted {extractedText.length} characters from {uploadedFile?.type}
-                </p>
-              </div>
+
             </div>
           )}
 
