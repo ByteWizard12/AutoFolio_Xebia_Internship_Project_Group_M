@@ -10,6 +10,7 @@ import { Plus, Eye, Download, Share2, Settings, LogOut, Zap, Copy } from "lucide
 import { DashboardStats3D } from "../components/3d/dashboard-stats-3d"
 import { InteractiveCard3D } from "../components/3d/interactive-card"
 import { API_ENDPOINTS } from "../config/api"
+import API_BASE_URL from "../config/api";
 
 export default function DashboardPage() {
   const { user, logout, loading } = useAuth()
@@ -83,7 +84,7 @@ export default function DashboardPage() {
     return null
   }
 
- const publicBase = import.meta.env.VITE_BACKEND_URL + "/api/portfolio/public/" 
+  const publicBase = API_BASE_URL + "/api/portfolio/public/";
 
   return (
     <div className="min-h-screen bg-gray-50">
