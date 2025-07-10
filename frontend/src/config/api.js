@@ -1,5 +1,5 @@
 // API Configuration for deployment
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://autofolio-xebia-internship-project-group.onrender.com';
 
 export const API_ENDPOINTS = {
   // Auth endpoints
